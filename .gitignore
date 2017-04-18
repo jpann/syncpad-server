@@ -56,3 +56,7 @@ typings/
 
 # dotenv environment variables file
 .env
+
+# Ignore dev certificates
+certs/*
+!certs/.gitkeep
