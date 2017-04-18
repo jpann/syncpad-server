@@ -13,6 +13,6 @@
     "socket.io": "^1.7.3",
     "socketio-auth": "^0.1.0",
     "sqlite": "^2.5.0",
-    "prompt": "^1.0.0",
+    "prompt": "^1.0.0"
   }
 }
