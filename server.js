@@ -18,6 +18,20 @@ require('socketio-auth')(io, {
   timeout: 1000
 });
 
+function getListOfSocketsInRoom(room) 
+{
+    let sockets = [];
+    try {
+        let socketObj = io.sockets.adapter.rooms[room].sockets;
+        for (let id of Object.keys(socketObj)) {
+            sockets.push(io.sockets.connected[id]);
+        }
+    } catch(e) {
+        console.log(`Attempted to access non-existent room: ${room}`);
+    }
+    return sockets;
+}
+
 
 function authenticate(socket, data, callback)
 {
@@ -40,6 +54,28 @@ function postAuthenticate(socket, data)
   console.log("Authenticated: " + username);
 
   socket.broadcast.to(socket.roomId).emit('client_message', { uname : "SERVER", message: "* " + socket.client.user + " connected *" });
+
+  // Go through each client and send a text:latest
+  var sockets = getListOfSocketsInRoom(room);
+
+  //TODO Break this out into its own method.
+  for (var i = 0; i < sockets.length; i++)
+  {
+    if (sockets[i].id == socket.id)
+      return;
+
+    sockets[i].emit('text:latest', 
+        { 
+          "user" : username,
+          "address" : socket.handshake.address
+        }, function (data)
+        {
+          var m_text = data.text;
+          var m_hostname = data.hostname;
+          
+          socket.emit('text:refresh', { "text" : m_text, "hostname" : m_hostname });
+        });
+  }
 }
 
 io.on('connection', function(socket)
@@ -96,7 +132,7 @@ io.on('connection', function(socket)
         "hostname" : hostname
       });
   });
-})
+});
 
 function start(port, configuration, database)
 {
