@@ -51,7 +51,8 @@ function emitToOthersInRoomWithCallback(room, socketId, eventName, eventMessage,
     if (sockets[i].id == socketId)
       return;
 
-    sockets[i].emit(eventName, eventMessage, callback);
+    //sockets[i].emit(eventName, eventMessage, callback);
+    sockets[i].emit(eventName, eventMessage);
   }
 }
 
@@ -103,12 +104,15 @@ function postAuthenticate(socket, data)
     "text:latest", 
     {   
       "user" : username,
-      "address" : socket.request.connection.remoteAddress
+      "address" : socket.request.connection.remoteAddress,
+      "id" : socket.id
     }, 
     function (data)
     {
       var m_text = data.text;
       var m_hostname = data.hostname;
+
+      //TODO This entire text refresh needs to be thought out again.
 
       socket.emit('text:refresh', { "text" : m_text, "hostname" : m_hostname });
     });
@@ -144,6 +148,8 @@ io.on('connection', function(socket)
     var m_hostname = msg.hostname;
     var m_encrypted = msg.encrypted;
 
+    console.log('text: ' + JSON.stringify(msg));
+
     socket.broadcast.to(socket.roomId).emit('text', 
     { 
       "user" : m_user, 
@@ -168,6 +174,18 @@ io.on('connection', function(socket)
         "is_typing" : typing,
         "hostname" : hostname
       });
+  });
+
+  socket.on('text:refresh', function(msg)
+  {
+    var user = socket.client.user;
+    var address = socket.request.connection.remoteAddress;
+    var id = msg.id;
+    var text = msg.text;
+
+    console.log('text:refresh - ' + id);
+
+    socket.broadcast.to(id).emit('text:refresh', { "text" : text, "hostname" : address });
   });
 });
 
