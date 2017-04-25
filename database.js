@@ -1,9 +1,10 @@
 'use strict';
 
+var config = require("./config.json");
 var passwordHash = require('password-hash');
 var sqlite3 = require('sqlite3');
 
-var db_file = "./db/database.db";
+var db_file = config.database_file;
 
 var db = new sqlite3.Database(db_file);
 
