@@ -1,208 +1,284 @@
 'use strict';
 
-var app = require("express")();
-var http = require("http").Server(app);
-var io = require("socket.io")(http);
+var express = require("express");
+var app = express();
+var fs = require('fs');
+var async = require('async');
 
-var db;
+var io = require("socket.io");
+var database;
 var config;
 
+//
+// Socket.io 
+//
 let connectedClients = {};
-
-app.get('/', function(req, res)
-{
-  res.sendStatus(200);
-});
-
-require('socketio-auth')(io, 
-{
-  authenticate: authenticate,
-  postAuthenticate: postAuthenticate,
-  timeout: 1000
-});
 
 function getSocketsInRoom(room)
 {
-  let sockets = [];
+    let sockets = [];
 
-  try 
-  {
-    let socketObj = io.sockets.adapter.rooms[room].sockets;
-
-    for (let id of Object.keys(socketObj)) 
+    try 
     {
-      sockets.push(io.sockets.connected[id]);
-    }
-  } 
-  catch(e) 
-  {
-    console.log(`Attempted to access non-existent room: ${room}`);
-  }
+        let socketObj = io.sockets.adapter.rooms[room].sockets;
 
-  return sockets;
+        for (let id of Object.keys(socketObj)) 
+        {
+            sockets.push(io.sockets.connected[id]);
+        }
+    }
+    catch (e) 
+    {
+        console.log(`Attempted to access non-existent room: ${room}`);
+    }
+
+    return sockets;
 }
 
 function emitToOthersInRoom(room, socketId, eventName, eventMessage)
 {
-  var sockets = getSocketsInRoom(room);
+    var sockets = getSocketsInRoom(room);
 
-  for (var i = 0; i < sockets.length; i++)
-  {
-    if (sockets[i].id == socketId)
-      return;
+    for (var i = 0; i < sockets.length; i++)
+    {
+        if (sockets[i].id == socketId)
+            return;
 
-    sockets[i].emit(eventName, eventMessage);
-  }
+        sockets[i].emit(eventName, eventMessage);
+    }
 }
 
 function emitToOthersInRoomWithCallback(room, socketId, eventName, eventMessage, callback)
 {
-  var sockets = getSocketsInRoom(room);
+    var sockets = getSocketsInRoom(room);
 
-  for (var i = 0; i < sockets.length; i++)
-  {
-    if (sockets[i].id == socketId)
-      return;
+    for (var i = 0; i < sockets.length; i++)
+    {
+        if (sockets[i].id == socketId)
+            return;
 
-    sockets[i].emit(eventName, eventMessage);
-  }
+        sockets[i].emit(eventName, eventMessage);
+    }
 }
 
 function addConnectedClient(socketId, data)
 {
-  if (!(socketId in connectedClients))
-  {
-    connectedClients[socketId] = data;
-  }
+    if (!(socketId in connectedClients))
+    {
+        connectedClients[socketId] = data;
+    }
 }
 
 function removeConnectedClient(socketId)
 {
-  if (!(socketId in connectedClients))
-  {
-    delete connectedClients[socketId];
-  }
+    if (!(socketId in connectedClients))
+    {
+        delete connectedClients[socketId];
+    }
+}
+
+function getClientCount(username)
+{
+    var count = 0;
+
+    for (var i = 0; i < connectedClients.length; i++)
+    {
+        if (username.toLowerCase() == connectedClients[i].username.toLowerCase())
+        {
+            count++;
+        }
+    }
+
+    return count;
 }
 
 function authenticate(socket, data, callback)
 {
-  var username = data.username;
-  var password = data.password;
+    var username = data.username;
+    var password = data.password;
 
-  db.validate_user(username, password, callback);
+    database.validate_user(username, password, function(err, user)
+        {
+            if (err || !user)
+            {
+                callback(err, null);
+            }
+            else
+            {
+                if (user.locked)
+                {
+                    callback(new Error("Account locked."), null);
+                }
+                
+                // Get current max clients
+                async.filter(connectedClients, function(client, callback)
+                {
+                    if (username.toLowerCase() == client.username.toLowerCase())
+                    {
+                        callback(null, client);
+                    }
+                }, function( err, results)
+                {
+                    if (results.length > user.max_clients)
+                    {
+                        callback(new Error("Max clients reached."), null);
+                    }
+                    else
+                    {
+                        callback(null, user);
+                    }
+                });
+            }
+        });
 }
 
 function postAuthenticate(socket, data) 
 {
-  var username = data.username;
-  var editor_room_id = data.editor_room_id;
-  
-  socket.client.user = username;
-  socket.roomId = editor_room_id;
+    var username = data.username;
+    var editor_room_id = data.editor_room_id;
 
-  console.log(`Authenticated: ${socket.client.user} [${socket.request.connection.remoteAddress}]; room '${socket.roomId}'.`);
+    socket.client.user = username;
+    socket.roomId = editor_room_id;
 
-  socket.join(socket.roomId);
+    console.log(`Authenticated: ${socket.client.user} [${socket.request.connection.remoteAddress}]; room '${socket.roomId}'.`);
 
-  // Add to connectedClients
-  addConnectedClient(socket.id, { "username" : username, "room" : [ socket.roomId ]});
+    socket.join(socket.roomId);
 
-  socket.broadcast.to(socket.roomId).emit('room:join', { "room" : socket.roomId, "user" : socket.client.user });
+    // Add to connectedClients
+    addConnectedClient(socket.id, { "username": username, "room": [socket.roomId] });
 
-  // Emit to every other client in the room asking them to send back a text:refresh with the latest text
-  emitToOthersInRoom(
-    socket.roomId, 
-    socket.id, 
-    "text:latest", 
-    {   
-      "user" : username,
-      "address" : socket.request.connection.remoteAddress,
-      "id" : socket.id
-    });
+    socket.broadcast.to(socket.roomId).emit('room:join', { "room": socket.roomId, "user": socket.client.user });
+
+    // Emit to every other client in the room asking them to send back a text:refresh with the latest text
+    emitToOthersInRoom(
+        socket.roomId,
+        socket.id,
+        "text:latest",
+        {
+            "user": username,
+            "address": socket.request.connection.remoteAddress,
+            "id": socket.id
+        });
 }
 
-io.on('connection', function(socket)
+function listen(
+    port, 
+    use_ssl,
+    ssl_key,
+    ssl_cert,
+    configuration, 
+    db)
 {
-  console.log(`Connected: ${socket.handshake.address}.`);
+    config = configuration;
+    database = db;
 
-  socket.on('disconnect', function()
-  {
-    console.log(`Disconnected: '${socket.client.user}' [${socket.request.connection.remoteAddress}].`);
+    var http;
 
-    // Remove from connectedClients
-    removeConnectedClient(socket.id);
+    if (use_ssl)
+    {
+        //TODO Fix this
+        var options = 
+        {
+            key : fs.readFileSync(ssl_key),
+            cert : fs.readFileSync(ssl_cert)
+        };
 
-    socket.broadcast.to(socket.roomId).emit('room:leave', { "room" : socket.roomId, "user" : socket.client.user });
-  });
+        var https = require("https");
+        http = https.createServer(options, app);
+    }
+    else
+    {
+        http = require("http").Server(app);
+    }
 
-  // Client message
-  socket.on('client_message', function(msg)
-  {
-    var address = socket.handshake.address;
+    io = require("socket.io")(http);
 
-    io.in(socket.roomId).emit('client_message', msg);
-  });
+    require('socketio-auth')(io,
+        {
+            authenticate: authenticate,
+            postAuthenticate: postAuthenticate,
+            timeout: 1000
+        });
 
-  // Client text update
-  socket.on('text', function(msg)
-  {
-    var m_user = socket.client.user;
-    var m_text = msg.text;
-    var m_hostname = msg.hostname;
-    var m_encrypted = msg.encrypted;
+    io.on('connection', function(socket)
+    {
+        console.log(`Connected: ${socket.handshake.address}.`);
 
-    socket.broadcast.to(socket.roomId).emit('text', 
-    { 
-      "user" : m_user, 
-      "text" : m_text, 
-      "encrypted" : m_encrypted, 
-      "hostname" : m_hostname 
+        socket.on('disconnect', function()
+        {
+            console.log(`Disconnected: '${socket.client.user}' [${socket.request.connection.remoteAddress}].`);
+
+            // Remove from connectedClients
+            removeConnectedClient(socket.id);
+
+            socket.broadcast.to(socket.roomId).emit('room:leave', { "room": socket.roomId, "user": socket.client.user });
+        });
+
+        // Client message
+        socket.on('client_message', function(msg)
+        {
+            var address = socket.handshake.address;
+
+            io.in(socket.roomId).emit('client_message', msg);
+        });
+
+        // Client text update
+        socket.on('text', function(msg)
+        {
+            var m_user = socket.client.user;
+            var m_text = msg.text;
+            var m_hostname = msg.hostname;
+            var m_encrypted = msg.encrypted;
+
+            socket.broadcast.to(socket.roomId).emit('text',
+                {
+                    "user": m_user,
+                    "text": m_text,
+                    "encrypted": m_encrypted,
+                    "hostname": m_hostname
+                });
+        });
+
+        // Client 'is typing'
+        socket.on('text:typing', function(msg)
+        {
+            var user = socket.client.user;
+            var address = socket.request.connection.remoteAddress;
+            var typing = msg.is_typing;
+            var hostname = msg.hostname;
+
+            socket.broadcast.to(socket.roomId).emit('text:typing',
+                {
+                    "user": user,
+                    "address": address,
+                    "is_typing": typing,
+                    "hostname": hostname
+                });
+        });
+
+        socket.on('text:refresh', function(msg)
+        {
+            var user = socket.client.user;
+            var address = socket.request.connection.remoteAddress;
+            var id = msg.id;
+            var text = msg.text;
+
+            socket.broadcast.to(id).emit('text:refresh', { "text": text, "hostname": address });
+        });
     });
-  });
 
-  // Client 'is typing'
-  socket.on('text:typing', function(msg)
-  {
-    var user = socket.client.user;
-    var address = socket.request.connection.remoteAddress;
-    var typing = msg.is_typing;
-    var hostname = msg.hostname;
+    http.listen(port, function()
+    {
+        console.log("Service Listening on *:" + port);
+    });
 
-    socket.broadcast.to(socket.roomId).emit('text:typing', 
-      { 
-        "user" : user,
-        "address" : address,
-        "is_typing" : typing,
-        "hostname" : hostname
-      });
-  });
-
-  socket.on('text:refresh', function(msg)
-  {
-    var user = socket.client.user;
-    var address = socket.request.connection.remoteAddress;
-    var id = msg.id;
-    var text = msg.text;
-
-    socket.broadcast.to(id).emit('text:refresh', { "text" : text, "hostname" : address });
-  });
-});
-
-function start(port, configuration, database)
-{
-  config = configuration;
-  db = database;
-
-  http.listen(port, function()
-  {
-    console.log("Listening on *:" + port);
-  });
+    return io;
 }
 
 function stop()
 {
-  io.close();
+    io.close();
 }
 
-exports.start = start;
+exports.listen = listen;
 exports.stop = stop;

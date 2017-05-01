@@ -60,3 +60,6 @@ typings/
 # Ignore dev certificates
 certs/*
 !certs/.gitkeep
+
+
+*.env

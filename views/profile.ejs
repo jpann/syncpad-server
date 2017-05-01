@@ -1,0 +1,186 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Profile</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font: 10px Helvetica, Arial; }
+        .container 
+        { 
+            margin: 5px;
+            padding: 5px; 
+        }
+
+		.input-group
+        {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        .form-horizontal
+        {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        .alert
+        {
+            display: none;
+        }
+    </style>
+
+    <script src="/js/jquery-3.2.1.min.js"></script>
+    
+    <script src="/js/jquery.validate.js"></script>
+    <script src="/js/additional-methods.js"></script>
+    
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+  </head>
+    <body>
+        <div class="container">      
+            <%- include('partials/header', {user: user}) %>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">Profile</div>
+                <div class="panel-body" style="overflow-y: scroll; height: 90%" >
+
+                    <table id="user-info" class="table table-bordered table-hover">
+                    <tbody>
+                        <tr>
+                            <td class="col-md-1"><small>ID</small></td>
+                            <td class="col-md-11"><small><%= user.user_id %></small></td>
+                        </tr>
+                        <tr>
+                            <td class="col-md-1"><small>Username</small></td>
+                            <td class="col-md-11"><small><%= user.username %></small></td>
+                        </tr>
+                        <tr>
+                            <td class="col-md-1"><small>Max Clients</small></td>
+                            <td class="col-md-11"><small><%= user.max_clients %></small></td>
+                        </tr>
+                        <tr>
+                            <td class="col-md-1"><small>Locked</small></td>
+                            <td class="col-md-11"><small><%= user.locked %></small></td>
+                        </tr>
+                        <tr>
+                            <td class="col-md-1"><small>Role</small></td>
+                            <td class="col-md-11"><small><%= user.role %></small></td>
+                        </tr>
+                        <tr>
+                            <td class="col-md-1"><small>Password</small></td>
+                            <td class="col-md-11">
+                                <form id="update-password-form">
+                                    <div class="form-group row">
+                                        <div class="col-sm-10">
+                                            <input type="password" class="form-control form-control-lg" id="password" placeholder="Password">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-10">
+                                            <input type="password" class="form-control form-control-sm" id="password-confirm" placeholder="Confirm Password">
+                                        </div>
+                                    </div>
+                                    <button id="update-password" type="button" class="btn btn-default" data-userid="<%= user.user_id %>">Update Password</button>
+                                </form>
+
+                                <br/>
+                                <div class="alert alert-danger alert-dismissable" id="alert-error">
+                                    <button type="button" class="close" aria-hidden="true">&times;</button>
+                                    <p id="alert-error-txt"></p>
+                                </div>
+
+                                <div class="alert alert-success alert-dismissable" id="alert-success">
+                                    <button type="button" class="close" aria-hidden="true">&times;</button>
+                                   <p id="alert-success-txt"></p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                    </table>
+                </div>
+            </div>
+<script>
+$(function ()
+{
+    $('.alert .close').on('click', function(e) 
+    {
+        $(this).parent().hide();
+    });
+
+    function successAlert(msg)
+    {
+        $('#alert-success-txt').text(msg);
+        $('#alert-success').show();
+
+        $("#alert-success").fadeTo(2000, 500).slideUp(500, function()
+        {
+            $("#alert-success").slideUp(500);
+        });
+    }
+
+    function errorAlert(msg)
+    {
+        $('#alert-error-txt').text(msg);
+        $('#alert-error').show();
+
+        $("#alert-error").fadeTo(2000, 500).slideUp(500, function()
+        {
+            $("#alert-error").slideUp(500);
+        });
+    }
+
+    $('#update-password').click(function()
+    {
+        var user_id = $(this).attr('data-userid');
+        var password = $('#password').val();
+        var password_confirm = $('#password-confirm').val();
+
+        if (!password || password != password_confirm)
+        {
+            errorAlert("Passwords do not match.");
+
+            return;
+        }
+        
+        var postData = { "password" : password };
+
+        $.ajax(
+        {
+            url: '/api/profile/update',
+            type: "POST",
+            xhrFields: {
+                withCredentials: true
+            },
+            dataType: "json",
+            data: JSON.stringify(postData),
+            contentType: "application/json",
+            cache: false,
+            timeout: 5000,
+            complete: function() 
+            {
+ 
+            },
+            success: function(data) 
+            {
+                console.log(data);
+
+                successAlert("Success!");
+            },
+            error: function(jqXHR, textStatus, err)
+            {
+                console.warn(jqXHR.responseJSON.message)
+                console.warn('text status '+textStatus+', err '+err)
+
+
+                errorAlert(jqXHR.responseJSON.message);
+            },
+        });
+    });
+});
+</script>
+            <%- include('partials/footer', {user: user}) %>
+        </div>
+    </body>
+</html>
+
+
