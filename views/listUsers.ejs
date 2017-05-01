@@ -1,0 +1,287 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Users</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font: 10px Helvetica, Arial; }
+        .container 
+        { 
+            margin: 5px;
+            padding: 5px; 
+            height: 100%;
+        }
+
+        .alert
+        {
+            display: none;
+        }
+    </style>
+
+    <script src="/js/jquery-3.2.1.min.js"></script>
+    
+    <script src="/js/jquery.validate.js"></script>
+    <script src="/js/additional-methods.js"></script>
+    
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+  </head>
+    <body>
+        <div class="container">
+            <%- include('partials/header', {user: user}) %>
+            
+            <div class="panel panel-default">
+                <div class="panel-heading">Users</div>
+                <div class="panel-body" style="overflow-y: scroll; height: 90%" >
+
+                    <table id="user-table" class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th class="col-md-1"><small>Action</small></th>
+                            <th class="col-md-1"><small>Username</small></th>
+                            <th class="col-md-1"><small>Max Clients</small></th>
+                            <th class="col-md-1"><small>Locked</small></th>
+                            <th class="col-md-8"><small>Created On</small></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="well well-sm">
+                <form class="form-inline" id="adduser-form" action="/addUser" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input type="username" class="form-control" id="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" class="form-control" id="password">
+                    </div>
+
+                    <button id="adduser" type="button" class="btn btn-default">Add User</button>
+                </form>
+
+                <br/>
+                <div class="alert alert-danger alert-dismissable" id="alert-error">
+                    <button type="button" class="close" aria-hidden="true">&times;</button>
+                    <p id="alert-error-txt"></p>
+                </div>
+
+                <div class="alert alert-success alert-dismissable" id="alert-success">
+                    <button type="button" class="close" aria-hidden="true">&times;</button>
+                    <p id="alert-success-txt"></p>
+                </div>
+            </div>
+<script>
+$(function ()
+{
+    $('.alert .close').on('click', function(e) 
+    {
+        $(this).parent().hide();
+    });
+
+    function successAlert(msg)
+    {
+        $('#alert-success-txt').text(msg);
+        $('#alert-success').show();
+
+        $("#alert-success").fadeTo(2000, 500).slideUp(500, function()
+        {
+            $("#alert-success").slideUp(500);
+        });
+    }
+
+    function errorAlert(msg)
+    {
+        $('#alert-error-txt').text(msg);
+        $('#alert-error').show();
+
+        $("#alert-error").fadeTo(2000, 500).slideUp(500, function()
+        {
+            $("#alert-error").slideUp(500);
+        });
+    }
+
+    loadUsers();
+
+    $.ajaxSetup({
+        xhrFields: {
+            withCredentials: true
+        }
+    });
+
+    $('#adduser').click(function()
+    {
+        var username = $('#username').val();
+        var password = $('#password').val();
+
+        if (!password)
+        {
+            errorAlert('Please set a password');
+            return;
+        }
+
+        var postData = { "username" : username, "password" : password };
+
+        $('#username').val("");
+        $('#password').val("");
+
+        $.ajax(
+        {
+            url: '/api/addUser',
+            type: "POST",
+            xhrFields: {
+                withCredentials: true
+            },
+            dataType: "json",
+            data: JSON.stringify(postData),
+            contentType: "application/json",
+            cache: false,
+            timeout: 5000,
+            complete: function() 
+            {
+                console.log('completed')
+            },
+
+            success: function(data) 
+            {
+                console.log(data)
+
+                successAlert("Added user!");
+
+                loadUsers();
+            },
+
+            error: function(jqXHR, textStatus, err)
+            {
+                console.warn(jqXHR.responseJSON)
+                console.warn('text status '+textStatus+', err '+err)
+
+                errorAlert(jqXHR.responseJSON.message);
+            },
+        });
+    });
+
+    function loadUsers()
+    {
+        $.ajax(
+        {
+            url: '/api/listUsers',
+            type: "GET",
+            xhrFields: {
+                withCredentials: true
+            },
+            dataType: "json",
+            contentType: "application/json",
+            cache: false,
+            timeout: 5000,
+            complete: function() 
+            {
+            },
+
+            success: function(data) 
+            {
+                loadUsersTable(data);
+            },
+
+            error: function(jqXHR, textStatus, err)
+            {
+                console.warn(jqXHR.responseJSON.message)
+                console.warn('text status '+textStatus+', err '+err)
+
+                errorAlert(jqXHR.responseJSON.message);
+            },
+        });
+    }
+
+    function loadUsersTable(users)
+    {
+        $('#user-table tbody').empty();
+
+        $.each(users, function(id)
+        {
+            var user = users[id];
+
+            if (user.isadmin)
+            {
+                $('#user-table tbody').append(`
+                <tr>
+                    <td></td>
+                    <td><a href="/profile/${user.user_id}">${user.username}</a></td>
+                    <td>${user.max_clients}</td>
+                    <td>${user.locked}</td>
+                    <td>${user.addingdatetime}</td>
+                </tr>
+                `);
+            }
+            else
+            {
+                $('#user-table tbody').append(`
+                <tr>
+                    <td class="text-center"><button id="delete-user" class="btn btn-default glyphicon glyphicon-remove" type="button" data-userid="${user.user_id}"></button></td>
+                    <td><a href="/profile/${user.user_id}">${user.username}</a></td>
+                    <td>${user.max_clients}</td>
+                    <td>${user.locked}</td>
+                    <td>${user.addingdatetime}</td>
+                </tr>
+                `);
+            }
+        });
+    }
+
+    $('#user-table').on('click', '#delete-user', function()
+    {
+        var user_id = $(this).attr('data-userid');
+
+        if (user_id)
+        {
+            delUser(user_id);
+        }
+    });
+
+    function delUser(id)
+    {
+        var postData = { "id" : id };
+
+        $.ajax(
+        {
+            url: '/api/delUser',
+            type: "POST",
+            xhrFields: {
+                withCredentials: true
+            },
+            dataType: "json",
+            data: JSON.stringify(postData),
+            contentType: "application/json",
+            cache: false,
+            timeout: 5000,
+            complete: function() 
+            {
+ 
+            },
+            success: function(data) 
+            {
+                successAlert("Deleted user!");
+
+                loadUsers();
+            },
+            error: function(jqXHR, textStatus, err)
+            {
+                console.warn(jqXHR.responseJSON)
+                console.warn('text status '+textStatus+', err '+err)
+
+                errorAlert(jqXHR.responseJSON.message);
+            },
+        });
+    }
+});
+</script>
+
+            <%- include('partials/footer', {user: user}) %>
+        </div>
+    </body>
+</html>
+

@@ -8,12 +8,24 @@
   },
   "author": "jpann",
   "dependencies": {
+    "async": "^2.4.0",
+    "bluebird": "^3.5.0",
+    "body-parser": "^1.17.1",
+    "connect-ensure-login": "^0.1.1",
+    "cookie-parser": "^1.4.3",
+    "dotenv": "^4.0.0",
+    "ejs": "^2.5.6",
     "express": "^4.15.2",
+    "express-session": "^1.15.2",
+    "guid": "0.0.12",
+    "morgan": "^1.8.1",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0",
     "password-hash": "^1.2.2",
+    "prompt": "^1.0.0",
     "socket.io": "^1.7.3",
     "socketio-auth": "^0.1.0",
-    "sqlite": "^2.5.0",
-    "prompt": "^1.0.0"
+    "sqlite": "^2.6.0"
   },
   "devDependencies": {
     "eslint": "^3.19.0"

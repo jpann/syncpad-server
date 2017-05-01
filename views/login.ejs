@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font: 10px Helvetica, Arial; }
+        .container 
+        { 
+            margin: 5px;
+            padding: 5px; 
+        }
+
+		.input-group
+        {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        .form-horizontal
+        {
+            margin: 0px;
+            padding: 0px;
+        }
+    </style>
+
+    <script src="/js/jquery-3.2.1.min.js"></script>
+    
+    <script src="/js/jquery.validate.js"></script>
+    <script src="/js/additional-methods.js"></script>
+    
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+  </head>
+	<body>
+		<div class="container">
+			<form class="form-horizontal" id="login-form" action="/login" method="post">
+				<div class="input-group">
+					<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+						<input name="username" id="user" type="text" placeholder="Username" class="form-control" value="">
+				</div><br/>
+
+				<div class="input-group">
+					<span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+					<input name="password" id="password" type="password" placeholder="Password" class="form-control" value="">
+				</div><br/>
+				
+				<div class="form-group"> 
+					<div class="col-sm-offset-0 col-sm-12">
+						<button id="login" type="submit" class="btn btn-default">Login</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</body>
+</html>
+    
