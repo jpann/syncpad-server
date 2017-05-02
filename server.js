@@ -24,7 +24,12 @@ function getSocketsInRoom(room)
 
         for (let id of Object.keys(socketObj)) 
         {
-            sockets.push(io.sockets.connected[id]);
+            var socket = io.sockets.connected[id];
+
+            if (!socket)
+            {
+                sockets.push(io.sockets.connected[id]);
+            }
         }
     }
     catch (e) 
@@ -63,6 +68,9 @@ function emitToOthersInRoomWithCallback(room, socketId, eventName, eventMessage,
 
 function addConnectedClient(socketId, data)
 {
+    if (!socketId)
+        return;
+
     if (!(socketId in connectedClients))
     {
         connectedClients[socketId] = data;
@@ -121,6 +129,8 @@ function authenticate(socket, data, callback)
                 {
                     if (results.length > user.max_clients)
                     {
+                        console.log("Max clients reached.");
+
                         callback(new Error("Max clients reached."), null);
                     }
                     else
@@ -174,7 +184,7 @@ function listen(
 
     var http;
 
-    if (use_ssl)
+    if (use_ssl == 'Y')
     {
         //TODO Fix this
         var options = 
