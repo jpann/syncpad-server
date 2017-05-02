@@ -79,7 +79,7 @@ function addConnectedClient(socketId, data)
 
 function removeConnectedClient(socketId)
 {
-    if (!(socketId in connectedClients))
+    if (socketId in connectedClients)
     {
         delete connectedClients[socketId];
     }
