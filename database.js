@@ -171,7 +171,7 @@ function validate_user(username, password, callback)
                 }
                 else
                 {
-                    callback(new Error("Invalid password."), null);
+                    callback(null, null);
                 }
             }
         });

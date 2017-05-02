@@ -1,7 +1,7 @@
-<br/>
-<a href="/">Home</a> / 
-<a href="/profile">My Pofile</a> 
-<% if (user.role == 'admin') { %>
-/ <a href="/users">List Users</a> 
-<% } %>
-/ <a href="/logout">Log out</a>
+<nav class="navbar navbar-inverse navbar-fixed-bottom">
+  <div class="container-fluid">
+    <% if (user) { %>
+        <p class="navbar-text navbar-right">Signed in as <%= user.username %></p>
+    <% } %>
+  </div>
+</nav>

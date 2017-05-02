@@ -37,15 +37,15 @@
     <script src="/js/jquery-3.2.1.min.js"></script>
 
     <script src="/js/jquery.validate.js"></script>
-    <script src="/javascripts/additional-methods.js"></script>
+    <script src="/js/additional-methods.js"></script>
 
     <link rel="stylesheet" href="/css/bootstrap.min.css">
 </head>
 
 <body>
+    <%- include('partials/header', {user: user}) %>
+    
     <div class="container">
-        <%- include('partials/header', {user: user}) %>
-
             <div class="panel panel-default">
                 <div class="panel-heading">Profile</div>
                 <div class="panel-body" style="overflow-y: scroll; height: 90%">
@@ -259,8 +259,9 @@
                     });
                 });
             </script>
-            <%- include('partials/footer', {user: user}) %>
     </div>
+
+    <%- include('partials/footer', {user: user}) %>
 </body>
 
 </html>

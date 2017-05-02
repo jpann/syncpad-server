@@ -27,9 +27,9 @@
 
   </head>
     <body>
+        <%- include('partials/header', {user: user}) %>
+
         <div class="container">
-            <%- include('partials/header', {user: user}) %>
-            
             <div class="panel panel-default">
                 <div class="panel-heading">Users</div>
                 <div class="panel-body" style="overflow-y: scroll; height: 90%" >
@@ -279,9 +279,9 @@ $(function ()
     }
 });
 </script>
-
-            <%- include('partials/footer', {user: user}) %>
         </div>
+
+        <%- include('partials/footer', {user: user}) %>
     </body>
 </html>
 

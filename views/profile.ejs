@@ -37,9 +37,9 @@
     <link rel="stylesheet" href="/css/bootstrap.min.css">
   </head>
     <body>
-        <div class="container">      
-            <%- include('partials/header', {user: user}) %>
+        <%- include('partials/header', {user: user}) %>
 
+        <div class="container">      
             <div class="panel panel-default">
                 <div class="panel-heading">Profile</div>
                 <div class="panel-body" style="overflow-y: scroll; height: 90%" >
@@ -178,8 +178,9 @@ $(function ()
     });
 });
 </script>
-            <%- include('partials/footer', {user: user}) %>
         </div>
+
+        <%- include('partials/footer', {user: user}) %>
     </body>
 </html>
 
