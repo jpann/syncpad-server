@@ -1,2 +1,19 @@
-<h2>Server</h2>
-<br/>
+<nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">syncpad server</a>
+    </div>
+    <ul class="nav navbar-nav">
+      <li class="active"><a href="/">Home</a></li>
+      <li><a href="/profile">My Profile</a></li>
+
+      <% if (user.role == 'admin') { %>
+      <li><a href="/users">Users List</a></li>
+      <% } %>
+      
+    </ul>
+    <ul class="nav navbar-nav navbar-right">
+        <li><a href="/logout"><span class="glyphicon glyphicon-log-out"></span> Log Out</a></li>
+    </ul>
+  </div>
+</nav>
