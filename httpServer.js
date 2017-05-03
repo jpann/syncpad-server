@@ -450,7 +450,9 @@ exports.listen = function(
     config = configuration;
     socket = io;
 
-    if (use_ssl)
+    var http;
+    
+    if (use_ssl == 'Y')
     {
         //TODO Fix this
         var options = 
@@ -466,8 +468,6 @@ exports.listen = function(
     {
         http = require("http").Server(app);
     }
-
-    var http = require("http").Server(app);
 
     http.listen(port, function()
     {
