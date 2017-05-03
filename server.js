@@ -26,7 +26,7 @@ function getSocketsInRoom(room)
         {
             var socket = io.sockets.connected[id];
 
-            if (!socket)
+            if (socket)
             {
                 sockets.push(io.sockets.connected[id]);
             }
@@ -118,15 +118,22 @@ function authenticate(socket, data, callback)
                     callback(new Error("Account locked."), null);
                 }
                 
+                socket.client.user_id = user.user_id;
+
+                callback(null, user);
+
                 // Get current max clients
+                /*
                 async.filter(connectedClients, function(client, callback)
+                {
+                    callback(null, client);
+                }, function( err, results)
                 {
                     if (username.toLowerCase() == client.username.toLowerCase())
                     {
                         callback(null, client);
                     }
-                }, function( err, results)
-                {
+
                     if (results.length > user.max_clients)
                     {
                         console.log("Max clients reached.");
@@ -135,9 +142,12 @@ function authenticate(socket, data, callback)
                     }
                     else
                     {
+                        socket.client.user_id = user.user_id;
+
                         callback(null, user);
                     }
                 });
+                */
             }
         });
 }
