@@ -12,7 +12,7 @@ var config;
 //
 // Socket.io 
 //
-let connectedClients = {};
+let connectedClients = [];
 
 function getSocketsInRoom(room)
 {
@@ -66,22 +66,22 @@ function emitToOthersInRoomWithCallback(room, socketId, eventName, eventMessage,
     }
 }
 
-function addConnectedClient(socketId, data)
+function addConnectedClient(socket)
 {
-    if (!socketId)
+    if (!socket)
         return;
 
-    if (!(socketId in connectedClients))
+    if (!(socket in connectedClients))
     {
-        connectedClients[socketId] = data;
+        connectedClients.push(socket);
     }
 }
 
-function removeConnectedClient(socketId)
+function removeConnectedClient(socket)
 {
-    if (socketId in connectedClients)
+    if (connectedClients.indexOf(socket) != -1)
     {
-        delete connectedClients[socketId];
+        connectedClients.splice(connectedClients.indexOf(socket), 1);
     }
 }
 
@@ -91,7 +91,7 @@ function getClientCount(username)
 
     for (var i = 0; i < connectedClients.length; i++)
     {
-        if (username.toLowerCase() == connectedClients[i].username.toLowerCase())
+        if (username.toLowerCase() == connectedClients[i].client.user.toLowerCase())
         {
             count++;
         }
@@ -120,34 +120,28 @@ function authenticate(socket, data, callback)
                 
                 socket.client.user_id = user.user_id;
 
-                callback(null, user);
+                //callback(null, user);
 
-                // Get current max clients
-                /*
-                async.filter(connectedClients, function(client, callback)
+                var numberOfClients = connectedClients.reduce(function(p,c)
                 {
-                    callback(null, client);
-                }, function( err, results)
+                    if (username.toLowerCase() == c.client.user.toLowerCase())
+                    {
+                        p++;
+                    }
+
+                    return p;
+                }, 0);
+
+                if (numberOfClients > user.max_clients)
                 {
-                    if (username.toLowerCase() == client.username.toLowerCase())
-                    {
-                        callback(null, client);
-                    }
+                    console.log("Max clients reached.");
 
-                    if (results.length > user.max_clients)
-                    {
-                        console.log("Max clients reached.");
-
-                        callback(new Error("Max clients reached."), null);
-                    }
-                    else
-                    {
-                        socket.client.user_id = user.user_id;
-
-                        callback(null, user);
-                    }
-                });
-                */
+                    callback(new Error("Max clients reached."), null);
+                }
+                else
+                {
+                    callback(null, user);
+                }
             }
         });
 }
@@ -165,7 +159,7 @@ function postAuthenticate(socket, data)
     socket.join(socket.roomId);
 
     // Add to connectedClients
-    addConnectedClient(socket.id, { "username": username, "room": [socket.roomId] });
+    addConnectedClient(socket);
 
     socket.broadcast.to(socket.roomId).emit('room:join', { "room": socket.roomId, "user": socket.client.user });
 
@@ -229,7 +223,7 @@ function listen(
             console.log(`Disconnected: '${socket.client.user}' [${socket.request.connection.remoteAddress}].`);
 
             // Remove from connectedClients
-            removeConnectedClient(socket.id);
+            removeConnectedClient(socket);
 
             socket.broadcast.to(socket.roomId).emit('room:leave', { "room": socket.roomId, "user": socket.client.user });
         });
