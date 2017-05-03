@@ -4,6 +4,7 @@ var express = require("express");
 var app = express();
 var fs = require('fs');
 var async = require('async');
+var utils = require('./utils.js');
 
 var io = require("socket.io");
 var database;
@@ -154,7 +155,7 @@ function postAuthenticate(socket, data)
     socket.client.user = username;
     socket.roomId = editor_room_id;
 
-    console.log(`Authenticated: ${socket.client.user} [${socket.request.connection.remoteAddress}]; room '${socket.roomId}'.`);
+    console.log(`Authenticated: ${socket.client.user} [${utils.getIpAddress(socket.request.connection.remoteAddress)}]; room '${socket.roomId}'.`);
 
     socket.join(socket.roomId);
 
@@ -170,7 +171,7 @@ function postAuthenticate(socket, data)
         "text:latest",
         {
             "user": username,
-            "address": socket.request.connection.remoteAddress,
+            "address": utils.getIpAddress(socket.request.connection.remoteAddress),
             "id": socket.id
         });
 }
@@ -220,7 +221,7 @@ function listen(
 
         socket.on('disconnect', function()
         {
-            console.log(`Disconnected: '${socket.client.user}' [${socket.request.connection.remoteAddress}].`);
+            console.log(`Disconnected: '${socket.client.user}' [${utils.getIpAddress(socket.request.connection.remoteAddress)}].`);
 
             // Remove from connectedClients
             removeConnectedClient(socket);
@@ -257,7 +258,7 @@ function listen(
         socket.on('text:typing', function(msg)
         {
             var user = socket.client.user;
-            var address = socket.request.connection.remoteAddress;
+            var address = utils.getIpAddress(socket.request.connection.remoteAddress);
             var typing = msg.is_typing;
             var hostname = msg.hostname;
 
@@ -273,7 +274,7 @@ function listen(
         socket.on('text:refresh', function(msg)
         {
             var user = socket.client.user;
-            var address = socket.request.connection.remoteAddress;
+            var address = utils.getIpAddress(socket.request.connection.remoteAddress);
             var id = msg.id;
             var text = msg.text;
 

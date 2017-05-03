@@ -5,6 +5,8 @@ var express = require("express");
 var passport = require('passport');
 var Strategy = require('passport-local').Strategy;
 var bodyparser = require('body-parser');
+var utils = require('./utils.js');
+
 const SESSION_SECRET = process.env.SESSION_SECRET || 'keyboard cat';
 
 var database;
@@ -369,8 +371,7 @@ app.get('/api/listClients',
 
                 if (client)
                 {
-                    var remoteAddress = client.client.conn.remoteAddress;
-                    remoteAddress = remoteAddress.substring(remoteAddress.lastIndexOf(':') + 1);
+                    var remoteAddress = utils.getIpAddress(client.client.conn.remoteAddress);
 
                     clients.push(
                     {
