@@ -2,7 +2,7 @@
 <html>
   <head>
       <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Users</title>
+    <title>Connected Users</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font: 10px Helvetica, Arial; }
@@ -32,17 +32,16 @@
 
         <div class="container">
             <div class="panel panel-default">
-                <div class="panel-heading">Users</div>
+                <div class="panel-heading">Connected Users</div>
                 <div class="panel-body" style="overflow-y: scroll; height: 90%" >
 
                     <table id="user-table" class="table table-bordered table-hover">
                     <thead>
                         <tr>
-                            <th class="col-md-1"><small>Action</small></th>
                             <th class="col-md-1"><small>Username</small></th>
-                            <th class="col-md-1"><small>Max Clients</small></th>
-                            <th class="col-md-1"><small>Locked</small></th>
-                            <th class="col-md-8"><small>Created On</small></th>
+                            <th class="col-md-2"><small>Room ID</small></th>
+                            <th class="col-md-1"><small>Namespace</small></th>
+                            <th class="col-md-8"><small>Remote Address</small></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -52,19 +51,6 @@
             </div>
 
             <div class="well well-sm">
-                <form class="form-inline" id="adduser-form" action="/addUser" method="post" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="username">Username:</label>
-                        <input type="username" class="form-control" id="username">
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password:</label>
-                        <input type="password" class="form-control" id="password">
-                    </div>
-
-                    <button id="adduser" type="button" class="btn btn-default">Add User</button>
-                </form>
-
                 <br/>
                 <div class="alert alert-danger alert-dismissable" id="alert-error">
                     <button type="button" class="close" aria-hidden="true">&times;</button>
@@ -106,7 +92,7 @@ $(function ()
         });
     }
 
-    loadUsers();
+    loadClients();
 
     $.ajaxSetup({
         xhrFields: {
@@ -114,63 +100,11 @@ $(function ()
         }
     });
 
-    $('#adduser').click(function()
-    {
-        var username = $('#username').val();
-        var password = $('#password').val();
-
-        if (!password)
-        {
-            errorAlert('Please set a password');
-            return;
-        }
-
-        var postData = { "username" : username, "password" : password };
-
-        $('#username').val("");
-        $('#password').val("");
-
-        $.ajax(
-        {
-            url: '/api/addUser',
-            type: "POST",
-            xhrFields: {
-                withCredentials: true
-            },
-            dataType: "json",
-            data: JSON.stringify(postData),
-            contentType: "application/json",
-            cache: false,
-            timeout: 5000,
-            complete: function() 
-            {
-                console.log('completed')
-            },
-
-            success: function(data) 
-            {
-                console.log(data)
-
-                successAlert("Added user!");
-
-                loadUsers();
-            },
-
-            error: function(jqXHR, textStatus, err)
-            {
-                console.warn(jqXHR.responseJSON)
-                console.warn('text status '+textStatus+', err '+err)
-
-                errorAlert(jqXHR.responseJSON.message);
-            },
-        });
-    });
-
-    function loadUsers()
+    function loadClients()
     {
         $.ajax(
         {
-            url: '/api/listUsers',
+            url: '/api/listClients',
             type: "GET",
             xhrFields: {
                 withCredentials: true
@@ -185,7 +119,8 @@ $(function ()
 
             success: function(data) 
             {
-                loadUsersTable(data);
+                console.log(data);
+                loadClientTable(data);
             },
 
             error: function(jqXHR, textStatus, err)
@@ -198,64 +133,36 @@ $(function ()
         });
     }
 
-    function loadUsersTable(users)
+    function loadClientTable(clients)
     {
         $('#user-table tbody').empty();
 
-        $.each(users, function(id)
+        $.each(clients, function(id)
         {
-            var user = users[id];
+            var client = clients[id];
 
-            if (user.isadmin)
-            {
-                $('#user-table tbody').append(`
-                <tr>
-                    <td></td>
-                    <td><a href="/profile/${user.user_id}">${user.username}</a></td>
-                    <td>${user.max_clients}</td>
-                    <td>${user.locked}</td>
-                    <td>${user.addingdatetime}</td>
-                </tr>
-                `);
-            }
-            else
-            {
-                $('#user-table tbody').append(`
-                <tr>
-                    <td class="text-center"><button id="delete-user" class="btn btn-default glyphicon glyphicon-remove" type="button" data-userid="${user.user_id}"></button></td>
-                    <td><a href="/profile/${user.user_id}">${user.username}</a></td>
-                    <td>${user.max_clients}</td>
-                    <td>${user.locked}</td>
-                    <td>${user.addingdatetime}</td>
-                </tr>
-                `);
-            }
+            $('#user-table tbody').append(`
+            <tr>
+                <td><a href="/profile/${client.user_id}">${client.username}</a></td>
+                <td>${client.roomId}</td>
+                <td>${client.namespace}</td>
+                <td>${client.remoteAddress}</td>
+            </tr>
+            `);
         });
     }
 
-    $('#user-table').on('click', '#delete-user', function()
+    function listClients()
     {
-        var user_id = $(this).attr('data-userid');
-
-        if (user_id)
-        {
-            delUser(user_id);
-        }
-    });
-
-    function delUser(id)
-    {
-        var postData = { "id" : id };
-
         $.ajax(
         {
-            url: '/api/delUser',
+            url: '/api/clientList',
             type: "POST",
             xhrFields: {
                 withCredentials: true
             },
             dataType: "json",
-            data: JSON.stringify(postData),
+            data: "",
             contentType: "application/json",
             cache: false,
             timeout: 5000,
@@ -265,9 +172,9 @@ $(function ()
             },
             success: function(data) 
             {
-                successAlert("Deleted user!");
+                successAlert("Clients Loaded");
 
-                loadUsers();
+                loadClients();
             },
             error: function(jqXHR, textStatus, err)
             {

@@ -183,6 +183,21 @@ app.get('/users',
         }
     });
 
+app.get('/clients',
+    require('connect-ensure-login').ensureLoggedIn(),
+    checkRole('admin'),
+    function(req, res, next)
+    {
+        try
+        {
+            res.render('clientsList', { user: req.user });
+        }
+        catch (err)
+        {
+            next(err);
+        }
+    });
+
 //
 // API
 //
@@ -327,6 +342,51 @@ app.post('/api/updateUser',
                     res.status(500).json({ "status": "error", "message": err.message });
                 }
             });
+        }
+        catch (err)
+        {
+            console.log(err);
+
+            res.status(500).json({ "status": "error", "message": err.message });
+        }
+    });
+
+app.get('/api/listClients',
+    require('connect-ensure-login').ensureLoggedIn(),
+    checkRole('admin'),
+    function(req, res, next)
+    {
+        try
+        {
+            // get list of clients
+            var sockets = Object.keys(socket.sockets.sockets);
+            var clients = [];
+
+            for (var i = 0; i < sockets.length; i++)
+            {
+                var socketId = sockets[i];
+                var client = socket.sockets.connected[socketId];
+
+                if (client)
+                {
+                    var remoteAddress = client.client.conn.remoteAddress;
+                    remoteAddress = remoteAddress.substring(remoteAddress.lastIndexOf(':') + 1);
+
+                    clients.push(
+                    {
+                        "roomId" : client.roomId,
+                        "socketId" : socketId,
+                        "username" : client.client.user,
+                        "rooms" : Object.keys(client.rooms),
+                        "remoteAddress" : remoteAddress,
+                        "user_id" : client.client.user_id,
+                        "namespace" : client.nsp.name
+                    });
+                }
+            }
+
+            res.json(clients);
+            
         }
         catch (err)
         {
