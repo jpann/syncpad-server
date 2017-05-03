@@ -1,6 +1,6 @@
 {
   "name": "syncpad-server",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Node.js server for syncpad-client.",
   "main": "main.js",
   "scripts": {
