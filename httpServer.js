@@ -6,6 +6,7 @@ var passport = require('passport');
 var Strategy = require('passport-local').Strategy;
 var bodyparser = require('body-parser');
 var moment = require('moment');
+var flash = require('connect-flash');
 var utils = require('./utils.js');
 
 const SESSION_SECRET = process.env.SESSION_SECRET || 'keyboard cat';
@@ -17,6 +18,7 @@ var socket;
 // Setup
 var app = express();
 
+app.use(flash());
 app.use(express.static('public'));
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
@@ -26,6 +28,7 @@ app.use(require('cookie-parser')());
 
 app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({ extended: true }));
+
 
 app.use(require('express-session')({ secret: SESSION_SECRET, resave: false, saveUninitialized: false }));
 
@@ -38,18 +41,21 @@ const minPasswordLength = 6;
 // Passport
 // 
 passport.use(new Strategy(
-    function(username, password, cb)
+    {
+        passReqToCallback : true
+    },
+    function(req, username, password, cb)
     {
         database.validateUser(username, password, function(err, user)
         {
             if (err) 
             { 
-                return cb(err); 
+                return cb(err, false, { "message" : err.message }); 
             }
 
             if (!user) 
             { 
-                return cb(null, false); 
+                return cb(null, false, req.flash('loginMessage', 'User or password invalid.')); 
             }
 
             if (user)
@@ -117,15 +123,17 @@ app.get('/',
 app.get('/login',
     function(req, res)
     {
-        res.render('login');
+        var e = req.flash('loginMessage')
+        res.render('login', { errors :  e});
     });
 
 app.post('/login',
-    passport.authenticate('local', { failureRedirect: '/login' }),
-    function(req, res) 
-    {
-        res.redirect('/');
-    });
+    passport.authenticate('local', 
+    { 
+        successRedirect: '/',
+        failureRedirect: '/login',
+        failureFlash: true
+    }));
 
 app.get('/logout',
     function(req, res)
