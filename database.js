@@ -135,6 +135,25 @@ function update_user(id, max_clients, role, locked, callback)
         });
 }
 
+function update_last_connection_datetime(id, datetime, callback)
+{
+    if (id === undefined)
+        callback(new Error("Invalid ID."), null);
+
+    if (datetime === undefined)
+        callback(new Error("Invalid datetime."), null);
+
+    db.run("UPDATE users SET lastconnecteddatetime = ? WHERE user_id = ?", datetime, id)
+        .then(function()
+        {
+            callback(null, id);
+        })
+        .catch(err => 
+        {
+            callback(err, null);
+        });
+}
+
 function validate_user(username, password, callback)
 {
     db.get('SELECT id, username, password, isadmin, max_clients, user_id, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role  FROM users WHERE username = ?', username)
@@ -223,7 +242,7 @@ function validate_admin(username, password, callback)
 
 function get_user_by_id(id, callback)
 {
-    db.get('SELECT id, username, max_clients, user_id, password, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role  FROM users WHERE user_id = ?', id)
+    db.get('SELECT id, username, max_clients, user_id, password, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role, lastconnecteddatetime  FROM users WHERE user_id = ?', id)
         .then(function(row)
         {
             if (row == null || row == undefined || row == [])
@@ -247,7 +266,8 @@ function get_user_by_id(id, callback)
                     "user_id" : row.user_id, 
                     "addingdatetime" : row.addingdatetime,
                     "locked" : locked, 
-                    "role" : row.role  
+                    "role" : row.role ,
+                    "lastconnecteddatetime" : row.lastconnecteddatetime
                 });
             }
         });
@@ -255,7 +275,7 @@ function get_user_by_id(id, callback)
 
 function get_users(callback)
 {
-    db.all('SELECT id, username, isadmin, max_clients, user_id, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role FROM users')
+    db.all('SELECT id, username, isadmin, max_clients, user_id, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role, lastconnecteddatetime FROM users')
         .then(function(rows)
         {
             if (rows == null || rows == undefined || rows == [])
@@ -277,3 +297,4 @@ exports.validate_admin = validate_admin;
 exports.get_users = get_users;
 exports.update_password = update_password;
 exports.update_user = update_user;
+exports.update_last_connection_datetime = update_last_connection_datetime;

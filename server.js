@@ -5,7 +5,7 @@ var app = express();
 var fs = require('fs');
 var async = require('async');
 var utils = require('./utils.js');
-
+var moment = require('moment');
 var io = require("socket.io");
 var database;
 var config;
@@ -101,6 +101,17 @@ function getClientCount(username)
     return count;
 }
 
+function updateLastConnectionDateTime(socket, datetime)
+{
+    database.update_last_connection_datetime(socket.client.user_id, datetime, function(err, id)
+    {
+        if (err)
+        {
+            console.log("error: " + err.message);
+        }
+    });
+}
+
 function authenticate(socket, data, callback)
 {
     var username = data.username;
@@ -154,6 +165,8 @@ function postAuthenticate(socket, data)
 
     socket.client.user = username;
     socket.roomId = editor_room_id;
+    socket.client.connectedTime = moment(new Date()).format();
+    socket.client.lastUpdateTime = moment(new Date()).format();
 
     console.log(`Authenticated: ${socket.client.user} [${utils.getIpAddress(socket.request.connection.remoteAddress)}]; room '${socket.roomId}'.`);
 
@@ -161,6 +174,9 @@ function postAuthenticate(socket, data)
 
     // Add to connectedClients
     addConnectedClient(socket);
+
+    // Update last connection date time
+    updateLastConnectionDateTime(socket, moment(new Date()).format());
 
     socket.broadcast.to(socket.roomId).emit('room:join', { "room": socket.roomId, "user": socket.client.user });
 
@@ -226,6 +242,9 @@ function listen(
             // Remove from connectedClients
             removeConnectedClient(socket);
 
+            // Update last connection date time
+            updateLastConnectionDateTime(socket, moment(new Date()).format());
+
             socket.broadcast.to(socket.roomId).emit('room:leave', { "room": socket.roomId, "user": socket.client.user });
         });
 
@@ -261,6 +280,8 @@ function listen(
             var address = utils.getIpAddress(socket.request.connection.remoteAddress);
             var typing = msg.is_typing;
             var hostname = msg.hostname;
+
+            socket.client.lastUpdateTime = new Date();
 
             socket.broadcast.to(socket.roomId).emit('text:typing',
                 {

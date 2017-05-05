@@ -23,6 +23,7 @@
     
     <script src="/js/jquery.validate.js"></script>
     <script src="/js/additional-methods.js"></script>
+    <script src="/js/moment.js"></script>
     
     <link rel="stylesheet" href="/css/bootstrap.min.css">
 
@@ -42,7 +43,8 @@
                             <th class="col-md-1"><small>Username</small></th>
                             <th class="col-md-1"><small>Max Clients</small></th>
                             <th class="col-md-1"><small>Locked</small></th>
-                            <th class="col-md-8"><small>Created On</small></th>
+                            <th class="col-md-2"><small>Last Connected</small></th>
+                            <th class="col-md-6"><small>Created On</small></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -214,7 +216,8 @@ $(function ()
                     <td><a href="/profile/${user.user_id}">${user.username}</a></td>
                     <td>${user.max_clients}</td>
                     <td>${user.locked}</td>
-                    <td>${user.addingdatetime}</td>
+                    <td>${user.lastconnecteddatetime ? moment(user.lastconnecteddatetime, "YYYY MM DD, h:mm:ss a").fromNow() : ''}</td>
+                    <td>${moment(user.addingdatetime).format('MMMM Do YYYY, h:mm:ss a')}</td>
                 </tr>
                 `);
             }
@@ -226,7 +229,8 @@ $(function ()
                     <td><a href="/profile/${user.user_id}">${user.username}</a></td>
                     <td>${user.max_clients}</td>
                     <td>${user.locked}</td>
-                    <td>${user.addingdatetime}</td>
+                    <td>${user.lastconnecteddatetime ? moment(user.lastconnecteddatetime, "YYYY MM DD, h:mm:ss a").fromNow() : ''}</td>
+                    <td>${moment(user.addingdatetime).format('MMMM Do YYYY, h:mm:ss a')}</td>
                 </tr>
                 `);
             }
