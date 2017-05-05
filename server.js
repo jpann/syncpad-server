@@ -103,7 +103,7 @@ function getClientCount(username)
 
 function updateLastConnectionDateTime(socket, datetime)
 {
-    database.update_last_connection_datetime(socket.client.user_id, datetime, function(err, id)
+    database.updateClientLastConnectionDateTime(socket.client.user_id, datetime, function(err, id)
     {
         if (err)
         {
@@ -117,7 +117,7 @@ function authenticate(socket, data, callback)
     var username = data.username;
     var password = data.password;
 
-    database.validate_user(username, password, function(err, user)
+    database.validateUser(username, password, function(err, user)
         {
             if (err || !user)
             {
