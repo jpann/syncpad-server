@@ -161,7 +161,7 @@ exports.validateUser = function (username, password, callback)
         {
             if (row == null || row == undefined || row == [])
             {
-                callback(new Error("User not found."), null);
+                callback(null, null);
             }
             else
             {

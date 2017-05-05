@@ -61,8 +61,50 @@
 						<button id="login" type="submit" class="btn btn-default">Login</button>
 					</div>
 				</div>
+
+                <% if (errors.length > 0) { %> 
+                <div class="alert alert-danger alert-block  alert-dismissable" id="alert-error">
+                    <button type="button" class="close" aria-hidden="true">&times;</button>
+                    <p>
+                    <% for(var i = 0; i < errors.length; i++) { %>
+                        <%= errors[i] %></br>
+                    <% } %>
+                    </p>
+                </div>
+                <% }%>
 			</form>
 		</div>
 	</body>
+
+    <script>
+        $(function()
+        {
+            $('.alert .close').on('click', function(e) 
+            {
+                $(this).parent().hide();
+            });
+
+            function successAlert(msg)
+            {
+                $('#alert-success-txt').text(msg);
+                $('#alert-success').show();
+
+                $("#alert-success").fadeTo(2000, 500).slideUp(500, function()
+                {
+                    $("#alert-success").slideUp(500);
+                });
+            }
+
+            function errorAlert(msg)
+            {
+                $('#alert-error-txt').text(msg);
+                $('#alert-error').show();
+
+                $("#alert-error").fadeTo(2000, 500).slideUp(500, function()
+                {
+                    $("#alert-error").slideUp(500);
+                });
+            }
+    </script>
 </html>
     
