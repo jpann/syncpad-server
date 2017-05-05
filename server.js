@@ -217,7 +217,7 @@ function listen(
 
     io.on('connection', function(socket)
     {
-        console.log(`Connected: ${socket.handshake.address}.`);
+        console.log(`Connected: ${utils.getIpAddress(socket.request.connection.remoteAddress)}.`);
 
         socket.on('disconnect', function()
         {
