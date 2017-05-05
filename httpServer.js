@@ -40,7 +40,7 @@ const minPasswordLength = 6;
 passport.use(new Strategy(
     function(username, password, cb)
     {
-        database.validate_user(username, password, function(err, user)
+        database.validateUser(username, password, function(err, user)
         {
             if (err) 
             { 
@@ -70,7 +70,7 @@ passport.serializeUser(function(user, cb)
 
 passport.deserializeUser(function(id, cb)
 {
-    database.get_user_by_id(id, function(err, user)
+    database.getUserById(id, function(err, user)
     {
         if (err) 
         {
@@ -150,7 +150,7 @@ app.get('/profile/:id',
 
         try
         {
-            database.get_user_by_id(user_id, function(err, user)
+            database.getUserById(user_id, function(err, user)
             {
                 if (!err && user)
                 {
@@ -216,7 +216,7 @@ app.post('/api/profile/update',
             if (password.length < minPasswordLength)
                 throw new Error("Password is too short.");
 
-            database.update_password(user_id, password, function(err, id)
+            database.updatePassword(user_id, password, function(err, id)
             {
                 if (!err)
                 {
@@ -243,7 +243,7 @@ app.get('/api/listUsers',
     {
         try
         {
-            database.get_users(function(err, users)
+            database.getUsers(function(err, users)
             {
                 if (!err)
                 {
@@ -272,7 +272,7 @@ app.post('/api/addUser',
             if (password.length < minPasswordLength)
                 throw new Error("Password is too short.");
 
-            database.add_user(username, password, false, function(err, user)
+            database.addUser(username, password, false, function(err, user)
             {
                 if (!err)
                 {
@@ -302,7 +302,7 @@ app.post('/api/delUser',
 
         try
         {
-            database.del_user(user_id, function(err, id)
+            database.delUser(user_id, function(err, id)
             {
                 if (err)
                 {
@@ -334,7 +334,7 @@ app.post('/api/updateUser',
             if (password.length < minPasswordLength)
                 throw new Error("Password is too short.");
 
-            database.update_password(user_id, password, function(err, id)
+            database.updatePassword(user_id, password, function(err, id)
             {
                 if (!err)
                 {
@@ -424,7 +424,7 @@ app.post('/api/updateUserProfile',
             if (!locked)
                 locked = false;
 
-            database.update_user(user_id, max_clients, role, locked, function(err, id)
+            database.updateUser(user_id, max_clients, role, locked, function(err, id)
             {
                 if (!err)
                 {

@@ -7,14 +7,14 @@ var db = require('sqlite');
 
 db.open(db_file, { Promise })
 
-function generate_guid()
+exports.generateGuid = function()
 {
     var id = Guid.create();
 
     return id.value;
 }
 
-function add_user(username, password, isadmin, callback)
+exports.addUser = function(username, password, isadmin, callback)
 {
     if (username === undefined)
         callback(new Error("Username is not valid."), null);
@@ -34,7 +34,7 @@ function add_user(username, password, isadmin, callback)
             }
             else
             {
-                var guid = generate_guid();
+                var guid = generateGuid();
 
                 db.get("INSERT INTO users (username, password, isadmin, user_id) VALUES(?, ?, ?, ?)", username, hashed_password, isadmin, guid)
                     .then(function(err, data)
@@ -56,7 +56,7 @@ function add_user(username, password, isadmin, callback)
         });
 }
 
-function del_user(id, callback)
+exports.delUser = function(id, callback)
 {
     if (id === undefined)
         callback(new Error("Invalid ID"), null);
@@ -84,7 +84,7 @@ function del_user(id, callback)
         });
 }
 
-function update_password(id, password, callback)
+exports.updatePassword = function (id, password, callback)
 {
     if (id === undefined)
         callback(new Error("Invalid ID."), null);
@@ -105,7 +105,7 @@ function update_password(id, password, callback)
         });
 }
 
-function update_user(id, max_clients, role, locked, callback)
+exports.updateUser = function (id, max_clients, role, locked, callback)
 {
     if (id === undefined)
         callback(new Error("Invalid ID."), null);
@@ -135,7 +135,7 @@ function update_user(id, max_clients, role, locked, callback)
         });
 }
 
-function update_last_connection_datetime(id, datetime, callback)
+exports.updateClientLastConnectionDateTime = function (id, datetime, callback)
 {
     if (id === undefined)
         callback(new Error("Invalid ID."), null);
@@ -154,7 +154,7 @@ function update_last_connection_datetime(id, datetime, callback)
         });
 }
 
-function validate_user(username, password, callback)
+exports.validateUser = function (username, password, callback)
 {
     db.get('SELECT id, username, password, isadmin, max_clients, user_id, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role  FROM users WHERE username = ?', username)
         .then(function(row)
@@ -196,7 +196,7 @@ function validate_user(username, password, callback)
         });
 }
 
-function validate_admin(username, password, callback)
+exports.validateAdmin = function (username, password, callback)
 {
     db.get('SELECT id, username, password, isadmin, max_clients, user_id, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role  FROM users WHERE username = ? AND IsAdmin = 1', username)
         .then(function(row)
@@ -240,7 +240,7 @@ function validate_admin(username, password, callback)
         });
 }
 
-function get_user_by_id(id, callback)
+exports.getUserById = function (id, callback)
 {
     db.get('SELECT id, username, max_clients, user_id, password, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role, lastconnecteddatetime  FROM users WHERE user_id = ?', id)
         .then(function(row)
@@ -273,7 +273,7 @@ function get_user_by_id(id, callback)
         });
 }
 
-function get_users(callback)
+exports.getUsers = function (callback)
 {
     db.all('SELECT id, username, isadmin, max_clients, user_id, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role, lastconnecteddatetime FROM users')
         .then(function(rows)
@@ -288,13 +288,3 @@ function get_users(callback)
             }
         });
 }
-
-exports.add_user = add_user;
-exports.del_user = del_user;
-exports.validate_user = validate_user;
-exports.get_user_by_id = get_user_by_id;
-exports.validate_admin = validate_admin;
-exports.get_users = get_users;
-exports.update_password = update_password;
-exports.update_user = update_user;
-exports.update_last_connection_datetime = update_last_connection_datetime;
