@@ -5,6 +5,7 @@ var express = require("express");
 var passport = require('passport');
 var Strategy = require('passport-local').Strategy;
 var bodyparser = require('body-parser');
+var moment = require('moment');
 var utils = require('./utils.js');
 
 const SESSION_SECRET = process.env.SESSION_SECRET || 'keyboard cat';
@@ -371,6 +372,9 @@ app.get('/api/listClients',
 
                 if (client)
                 {
+                    var connectedTime = moment(client.client.connectedTime);
+                    var lastUpdateTime = moment(client.client.lastUpdateTime);
+
                     var remoteAddress = utils.getIpAddress(client.client.conn.remoteAddress);
 
                     clients.push(
@@ -381,7 +385,9 @@ app.get('/api/listClients',
                         "rooms" : Object.keys(client.rooms),
                         "remoteAddress" : remoteAddress,
                         "user_id" : client.client.user_id,
-                        "namespace" : client.nsp.name
+                        "namespace" : client.nsp.name,
+                        "connectedTime" : connectedTime.format('YYYY MM DD, h:mm:ss a'),
+                        "lastUpdateTime" : lastUpdateTime.format('YYYY MM DD, h:mm:ss a'),
                     });
                 }
             }

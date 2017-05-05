@@ -23,6 +23,7 @@
     
     <script src="/js/jquery.validate.js"></script>
     <script src="/js/additional-methods.js"></script>
+    <script src="/js/moment.js"></script>
     
     <link rel="stylesheet" href="/css/bootstrap.min.css">
 
@@ -41,7 +42,9 @@
                             <th class="col-md-1"><small>Username</small></th>
                             <th class="col-md-2"><small>Room ID</small></th>
                             <th class="col-md-1"><small>Namespace</small></th>
-                            <th class="col-md-8"><small>Remote Address</small></th>
+                            <th class="col-md-2"><small>Time Connected</small></th>
+                            <th class="col-md-2"><small>Time Idle</small></th>
+                            <th class="col-md-4"><small>Remote Address</small></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -146,6 +149,8 @@ $(function ()
                 <td><a href="/profile/${client.user_id}">${client.username}</a></td>
                 <td>${client.roomId}</td>
                 <td>${client.namespace}</td>
+                <td>${moment(client.connectedTime, "YYYY MM DD, h:mm:ss a").fromNow()}</td>
+                <td>${moment(client.lastUpdateTime, "YYYY MM DD, h:mm:ss a").fromNow()}</td>
                 <td>${client.remoteAddress}</td>
             </tr>
             `);
