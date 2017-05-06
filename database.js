@@ -7,6 +7,22 @@ var db = require('sqlite');
 
 db.open(db_file, { Promise })
 
+function getRole(role)
+{
+    if (role == 1)
+    {
+        return 'admin';
+    }
+    else if (role == 0)
+    {
+        return 'user';
+    }
+    else
+    {
+        return 'user';
+    }
+}
+
 exports.generateGuid = function()
 {
     var id = Guid.create();
@@ -23,6 +39,8 @@ exports.addUser = function(username, password, isadmin, callback)
         callback(new Error("Password is not valid."), null);
 
     var hashed_password = passwordHash.generate(password);
+
+    username = username.toLowerCase();
 
     // check if user exists
     db.get('SELECT username FROM users WHERE username = ?', username)
@@ -156,6 +174,8 @@ exports.updateClientLastConnectionDateTime = function (id, datetime, callback)
 
 exports.validateUser = function (username, password, callback)
 {
+    username = username.toLowerCase();
+
     db.get('SELECT id, username, password, isadmin, max_clients, user_id, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role  FROM users WHERE username = ?', username)
         .then(function(row)
         {
@@ -198,6 +218,8 @@ exports.validateUser = function (username, password, callback)
 
 exports.validateAdmin = function (username, password, callback)
 {
+    username = username.toLowerCase();
+
     db.get('SELECT id, username, password, isadmin, max_clients, user_id, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role  FROM users WHERE username = ? AND IsAdmin = 1', username)
         .then(function(row)
         {
