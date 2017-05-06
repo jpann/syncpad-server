@@ -23,7 +23,7 @@ function getRole(role)
     }
 }
 
-exports.generateGuid = function()
+function generateGuid()
 {
     var id = Guid.create();
 
