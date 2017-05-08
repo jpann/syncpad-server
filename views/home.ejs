@@ -43,8 +43,39 @@
 
 		<div class="container">
 			<% if (user) { %>
-			<p>Hello, <%= user.username %>. View your <a href="/profile">profile</a>.</p><br>
+			<p>Hello, <%= user.username %>. View your <a href="/profile">profile</a> is where you can change your password. See below for a quick start guide on how to use syncpad!</p><br><br>
 			<% } %>
+
+            <h2>Quick Start</h2>
+            <h4>Install</h4>
+            You already have an account, otherwise you wouldn't be able to see this page, so we'll skip that part.<br/><br/>
+            You have to download the syncpad-client and install it. You can download it <a href="https://ikonzeh.org/projects/syncpad/releases/syncpad-0.3.1-setup.exe">here</a>.<br/>
+            Once you download and install syncpad-client, you will have a shortcut on your desktop.
+
+            <br/><br/>
+            <h4>Executing</h4>
+            Execute the syncpad shortcut that was installed on your desktop.
+
+            <br/><br/>
+            <h4>Logging in</h4>
+            When you execute syncpad, you will be greeted with a login window where you set the syncpad server url, your login information, the room ID you wish to join as well as the option to encrypt all messages sent to that room and what encrytion key to use.
+            <br/><br/>
+            The login window will look like this:<br/><br/>
+            <img src="/syncpad-login.png" />
+            <br/><br/>
+
+            <h4>Set the following information:</h4><br/>
+            <div class="list-group">
+                <a href="#" class="list-group-item">Server: https://syncpad.ikonzeh.org:8443</a>
+                <a href="#" class="list-group-item">User: [your user]</a>
+                <a href="#" class="list-group-item">Password: [your password]</a>
+                <a href="#" class="list-group-item">Editor Room: You can click 'Generate' to generate a random room ID or you can enter your own room ID (the length has to be at least 10 characters).</a>
+                <a href="#" class="list-group-item">Enable Encryption: Check this if you wish to encrypt all text with AES encryption.</a>
+                <a href="#" class="list-group-item">Encryption Key: Set the key you wish to use for your encryption. This has to be at least 32 characters in length and any other clients that connect to this room ID will need to also use the same encryption key in order to decrypt the text, so remember this. You can use the 'Generate' button to generate a random encryption key.</a>
+            </div>
+            <br/><br/>
+            <br/><br/>
+            <br/><br/>
 		</div>
 
         <%- include('partials/footer', {user: user}) %>
