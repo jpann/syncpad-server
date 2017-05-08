@@ -101,9 +101,9 @@ function getClientCount(username)
     return count;
 }
 
-function updateLastConnectionDateTime(socket, datetime)
+function updateLastConnectionDateTime(user_id, datetime)
 {
-    database.updateClientLastConnectionDateTime(socket.client.user_id, datetime, function(err, id)
+    database.updateClientLastConnectionDateTime(user_id, datetime, function(err, id)
     {
         if (err)
         {
@@ -152,6 +152,8 @@ function authenticate(socket, data, callback)
                 }
                 else
                 {
+                    console.log("Authenticated: " + username);
+                    
                     callback(null, user);
                 }
             }
@@ -176,7 +178,7 @@ function postAuthenticate(socket, data)
     addConnectedClient(socket);
 
     // Update last connection date time
-    updateLastConnectionDateTime(socket, moment(new Date()).format());
+    updateLastConnectionDateTime(socket.client.user_id, moment(new Date()).format());
 
     socket.broadcast.to(socket.roomId).emit('room:join', { "room": socket.roomId, "user": socket.client.user });
 
@@ -243,7 +245,7 @@ function listen(
             removeConnectedClient(socket);
 
             // Update last connection date time
-            updateLastConnectionDateTime(socket, moment(new Date()).format());
+            //updateLastConnectionDateTime(socket.client.user_id, moment(new Date()).format());
 
             socket.broadcast.to(socket.roomId).emit('room:leave', { "room": socket.roomId, "user": socket.client.user });
         });
