@@ -8,6 +8,7 @@ var bodyparser = require('body-parser');
 var moment = require('moment');
 var flash = require('connect-flash');
 var utils = require('./utils.js');
+var CryptoJS = require("crypto-js");
 
 const SESSION_SECRET = process.env.SESSION_SECRET || 'keyboard cat';
 
@@ -202,6 +203,90 @@ app.get('/clients',
         try
         {
             res.render('clientsList', { user: req.user });
+        }
+        catch (err)
+        {
+            next(err);
+        }
+    });
+
+//
+// Editor 
+//
+var editorRooms = [];
+
+app.get('/editor',
+    require('connect-ensure-login').ensureLoggedIn(),
+    function(req, res, next)
+    {
+        try
+        {
+            res.render('editor/editorLogin', { user: req.user });
+        }
+        catch (err)
+        {
+            next(err);
+        }
+    });
+
+app.post('/editor',
+    require('connect-ensure-login').ensureLoggedIn(),
+    function(req, res, next)
+    {
+        try
+        {
+            var username = req.body.user;
+            var password = req.body.password;
+
+            // 1. Verify username and password
+            database.validateUser(username, password, function(err, user)
+            {
+                if (err) 
+                { 
+                    res.render('editor/editorLogin', { user: req.user, "error" : err.message});
+                }
+
+                if (!user) 
+                { 
+                    res.render('editor/editorLogin', { user: req.user, "error" : err.message}); 
+                }
+
+                if (user)
+                {
+                    // 2. Create random room Id
+                    var roomId = CryptoJS.lib.WordArray.random(128/8);
+
+                    //var info = CryptoJS.AES.encrypt(`${username}::${password}`, user.user_id).toString(CryptoJS.enc.Base64);
+                    //req.session['info'] = info;
+                    //res.redirect('/editor/' + roomId);
+
+                    // 
+                }
+            });
+
+            
+        }
+        catch (err)
+        {
+            next(err);
+        }
+    });
+
+app.get('/editor/:roomId',
+    require('connect-ensure-login').ensureLoggedIn(),
+    function(req, res, next)
+    {
+        try
+        {
+            var roomId = req.params.roomId;
+            var info = req.session['info'];
+
+            info = CryptoJS.AES.decrypt(JSON.parse(info), req.user.user_id);
+
+            var username = info.split("::")[0];
+            var password = info.split("::")[1];
+
+            res.send("room: " + roomId);
         }
         catch (err)
         {

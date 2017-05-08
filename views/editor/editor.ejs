@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+  <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Editor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font: 10px Helvetica, Arial; }
+        .container 
+        { 
+            margin: 5px;
+            padding: 5px; 
+        }
+
+		.input-group
+        {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        .form-horizontal
+        {
+            margin: 0px;
+            padding: 0px;
+        }
+    </style>
+
+    <script src="/js/jquery-3.2.1.min.js"></script>
+    
+    <script src="/js/jquery.validate.js"></script>
+    <script src="/js/additional-methods.js"></script>
+
+    <script src="/js/cryptojslib/rollups/aes.js"></script>
+    <script src="/js/cryptojslib/rollups/pbkdf2.js"></script>
+    
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+  </head>
+	<body>
+        <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+            <a class="navbar-brand" href="#">syncpad server</a>
+            </div>
+            <ul class="nav navbar-nav">
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+            </ul>
+        </div>
+        </nav>
+		<div class="container">
+			<% if (user) { %>
+			<p>Hello, <%= user.username %>.</p><br>
+			<% } %>
+
+            <% if (login) { %>
+            - <%= login.username %><br>
+            - <%= login.password %>
+            <% } %>
+		</div>
+	</body>
+
+    <script>
+        $(function()
+        {
+            //TODO Jquery Validation
+            
+            $('.alert .close').on('click', function(e) 
+            {
+                $(this).parent().hide();
+            });
+
+            function successAlert(msg)
+            {
+                $('#alert-success-txt').text(msg);
+                $('#alert-success').show();
+
+                $("#alert-success").fadeTo(2000, 500).slideUp(500, function()
+                {
+                    $("#alert-success").slideUp(500);
+                });
+            }
+
+            function errorAlert(msg)
+            {
+                $('#alert-error-txt').text(msg);
+                $('#alert-error').show();
+
+                $("#alert-error").fadeTo(2000, 500).slideUp(500, function()
+                {
+                    $("#alert-error").slideUp(500);
+                });
+            }
+
+            $('#encryption_key_btn').click(function()
+            {
+                $('#encryption_key').val(CryptoJS.lib.WordArray.random(128/8));
+            });
+        });
+    </script>
+</html>
+    
