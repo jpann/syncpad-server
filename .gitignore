@@ -61,6 +61,7 @@ typings/
 certs/*
 !certs/.gitkeep
 
+db/sessions.db
 
 .env
 .vscode

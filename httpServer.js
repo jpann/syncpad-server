@@ -18,6 +18,9 @@ var socket;
 
 // Setup
 var app = express();
+var session = require('express-session');
+
+var SQLiteStore = require('connect-sqlite3')(session);
 
 app.use(flash());
 app.use(express.static('public'));
@@ -30,8 +33,14 @@ app.use(require('cookie-parser')());
 app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({ extended: true }));
 
-
-app.use(require('express-session')({ secret: SESSION_SECRET, resave: false, saveUninitialized: false }));
+app.use(session(
+{
+    store: new SQLiteStore({'db' : 'sessions', 'dir' : 'db' }),
+    secret : SESSION_SECRET,
+    cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }, // 1 week
+    resave: false, 
+    saveUninitialized: false 
+}))
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -61,6 +70,12 @@ passport.use(new Strategy(
 
             if (user)
             {
+                var pass = CryptoJS.AES.encrypt(password, user.user_id).toString();
+
+                var p = CryptoJS.AES.decrypt(pass, user.user_id).toString(CryptoJS.enc.Utf8);
+
+                req.session['info_p'] = pass;
+
                 return cb(null, user);
             }
         });
@@ -90,7 +105,6 @@ passport.deserializeUser(function(id, cb)
 //
 // HTTP Routes
 // 
-//var http = require("http").Server(app);
 var checkRole = function(role)
 {
     return function(req, res, next)
@@ -256,9 +270,7 @@ app.post('/editor',
                     // 2. Create random room Id
                     var roomId = CryptoJS.lib.WordArray.random(128/8);
 
-                    //var info = CryptoJS.AES.encrypt(`${username}::${password}`, user.user_id).toString(CryptoJS.enc.Base64);
-                    //req.session['info'] = info;
-                    //res.redirect('/editor/' + roomId);
+                    res.redirect('/editor/' + roomId);
 
                     // 
                 }
@@ -279,12 +291,12 @@ app.get('/editor/:roomId',
         try
         {
             var roomId = req.params.roomId;
-            var info = req.session['info'];
+            var info_p = req.session['info_p'];
 
-            info = CryptoJS.AES.decrypt(JSON.parse(info), req.user.user_id);
-
-            var username = info.split("::")[0];
-            var password = info.split("::")[1];
+            if (!info_p)
+                res.redirect('/editor');
+                
+            var pass = CryptoJS.AES.decrypt(info_p, req.user.user_id).toString(CryptoJS.enc.Utf8);
 
             res.send("room: " + roomId);
         }
