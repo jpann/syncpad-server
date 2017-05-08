@@ -77,7 +77,10 @@
                                 <tr>
                                     <td class="col-md-1"><small>Role</small></td>
                                     <td class="col-md-11">
-                                        <input name="role" id="role" type="text" placeholder="" class="form-control input-sm" value="<%= edit_user.role %>">
+                                        <select class="form-control" id="role">
+                                            <option <% if (user.role == 'user') { %>selected<% } %>>user</option>
+                                            <option <% if (user.role == 'admin') { %>selected<% } %>>admin</option>
+                                        </select>
                                     </td>
                                 </tr>
                                 <tr>
@@ -159,7 +162,9 @@
                     {
                         var user_id = $(this).attr('data-userid');
                         var max_clients = $('#max_clients').val();
-                        var role = $('#role').val();
+                        //var role = $('#role').val();
+                        var role = $('#role').find("option:selected").text();
+
                         var locked = $('#user-locked').prop('checked');
 
                         if (!role)
