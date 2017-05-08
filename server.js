@@ -117,6 +117,8 @@ function authenticate(socket, data, callback)
     var username = data.username;
     var password = data.password;
 
+    console.log("authenticate: " + username);
+
     database.validateUser(username, password, function(err, user)
         {
             if (err || !user)
@@ -153,7 +155,7 @@ function authenticate(socket, data, callback)
                 else
                 {
                     console.log("Authenticated: " + username);
-                    
+
                     callback(null, user);
                 }
             }
