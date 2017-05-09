@@ -234,14 +234,13 @@ function listen(
 
     io = require("socket.io")(http);
 
-    /*
+    
     require('socketio-auth')(io,
         {
             authenticate: authenticate,
             postAuthenticate: postAuthenticate,
             timeout: 1000
         });
-    */
     
     // Passport session
     io.use(passportSocketIo.authorize({
