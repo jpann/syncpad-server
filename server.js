@@ -10,6 +10,12 @@ var io = require("socket.io");
 var database;
 var config;
 
+const SESSION_SECRET = process.env.SESSION_SECRET || 'keyboard cat';
+
+var session = require('express-session');
+var SQLiteStore = require('connect-sqlite3')(session);
+var passportSocketIo = require("passport.socketio");
+
 //
 // Socket.io 
 //
@@ -228,12 +234,41 @@ function listen(
 
     io = require("socket.io")(http);
 
+    /*
     require('socketio-auth')(io,
         {
             authenticate: authenticate,
             postAuthenticate: postAuthenticate,
             timeout: 1000
         });
+    */
+    
+    // Passport session
+    io.use(passportSocketIo.authorize({
+        cookieParser: require('cookie-parser')(),       // the same middleware you registrer in express
+        key:          'connect.sid',       // the name of the cookie where express/connect stores its session_id
+        secret:       SESSION_SECRET,    // the session_secret to parse the cookie
+        store:         new SQLiteStore({'db' : 'sessions', 'dir' : 'db' }),        // we NEED to use a sessionstore. no memorystore please
+        success:      onAuthorizeSuccess,  // *optional* callback on success - read more below
+        fail:         onAuthorizeFail,     // *optional* callback on fail/error - read more below
+    }));
+
+    function onAuthorizeSuccess(data, accept)
+    {
+        console.log('successful connection to socket.io');
+
+        accept();
+    }
+
+    function onAuthorizeFail(data, message, error, accept)
+    {
+        if(error)
+            throw new Error(message);
+        console.log('failed connection to socket.io:', message);
+
+        if(error)
+            accept(new Error(message));
+        }
 
     io.on('connection', function(socket)
     {
