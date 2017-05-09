@@ -108,17 +108,19 @@
 
         $(function()
         {
-            var sid = getCookie('connect.sid');
-            console.log($('#sid').val());
+            var sid = $('#sid').val();
+            console.log("sid: " + sid);
 
             var socket = io('https://syncpad.ikonzeh.org:8443',
             {
-                query: 'session_id=' + $('#sid').val()
+                query: 'session_id=' + sid
             }
             );
 
             socket.on('connect', function()
             {
+                console.log('socket:connect');
+
                 /*
                 socket.emit('authentication', 
                 { 
