@@ -9,6 +9,7 @@ var moment = require('moment');
 var flash = require('connect-flash');
 var utils = require('./utils.js');
 var CryptoJS = require("crypto-js");
+var _ = require('underscore');
 
 const SESSION_SECRET = process.env.SESSION_SECRET || 'keyboard cat';
 
@@ -235,7 +236,7 @@ app.get('/editor',
     {
         try
         {
-            res.render('editor/editorLogin', { user: req.user });
+            res.render('editor/editorSetup', { user: req.user });
         }
         catch (err)
         {
@@ -243,39 +244,31 @@ app.get('/editor',
         }
     });
 
+function createRoom()
+{
+    var roomId = CryptoJS.lib.WordArray.random(128/8).toString();
+    var room = { 'roomId' : roomId };
+
+    return room;
+}
+
 app.post('/editor',
     require('connect-ensure-login').ensureLoggedIn(),
     function(req, res, next)
     {
         try
         {
-            var username = req.body.user;
-            var password = req.body.password;
+            var key = req.body.encryption_key;
 
-            // 1. Verify username and password
-            database.validateUser(username, password, function(err, user)
-            {
-                if (err) 
-                { 
-                    res.render('editor/editorLogin', { user: req.user, "error" : err.message});
-                }
+            if (!key)
+                res.redirect('/editor');
 
-                if (!user) 
-                { 
-                    res.render('editor/editorLogin', { user: req.user, "error" : err.message}); 
-                }
+            // 1. Create random room Id
+            const room = createRoom();
+            editorRooms.push(room);
 
-                if (user)
-                {
-                    // 2. Create random room Id
-                    var roomId = CryptoJS.lib.WordArray.random(128/8);
-
-                    res.redirect('/editor/' + roomId);
-
-                    // 
-                }
-            });
-
+            req.session['key'] = key;
+            res.redirect(`/editor/${room.roomId}`);
             
         }
         catch (err)
@@ -291,14 +284,36 @@ app.get('/editor/:roomId',
         try
         {
             var roomId = req.params.roomId;
-            var info_p = req.session['info_p'];
+            var encryption_key = req.session['key'];
 
-            if (!info_p)
+            if (!encryption_key)
                 res.redirect('/editor');
-                
-            var pass = CryptoJS.AES.decrypt(info_p, req.user.user_id).toString(CryptoJS.enc.Utf8);
 
-            res.send("room: " + roomId);
+            let roomExists = _.findWhere(editorRooms, { 'roomId' : roomId}) || false;
+
+            if (roomExists)
+            {
+                var info_p = req.session['info_p'];
+
+                if (!info_p)
+                    res.redirect('/editor');
+
+                var pass = CryptoJS.AES.decrypt(info_p, req.user.user_id).toString(CryptoJS.enc.Utf8);
+
+                res.render('editor/editor', 
+                { 
+                    'user' : req.user, 
+                    'roomId' : roomId, 
+                    'key' : encryption_key, 
+                    'pass' : pass,
+                    'sid' : req.sessionID
+            });
+            }
+            else
+            {
+                res.redirect('/editor');
+            }
+            
         }
         catch (err)
         {

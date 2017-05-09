@@ -1,27 +1,48 @@
 <!doctype html>
 <html>
   <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Editor</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font: 10px Helvetica, Arial; }
-        .container 
+        html {
+            height: 100%;
+        }
+        body 
         { 
-            margin: 5px;
-            padding: 5px; 
+            font: 10px Helvetica, Arial; 
+            margin: 0;
+            height: 100%;
+        }
+        #container 
+        { 
+            height: 100%;
         }
 
-		.input-group
-        {
-            margin: 0px;
-            padding: 0px;
+		 #toolbar {
+            border-bottom: 1px solid #E8E8E8;
+            background-color: #F5F5F5;
+            min-height: 35px;
+            max-height: 35px;
+            height: 35px;
+
+            padding: 4px;
         }
 
-        .form-horizontal
+        #editor {
+            background-color: #FFFFFF;
+            height: calc(100% - 35px);
+
+        }
+
+        #status-bar {
+            background-color: #F5F5F5;
+            height: 10px;
+            padding: 5px;
+        }
+
+        .qt-toolbar.qt-snow
         {
-            margin: 0px;
-            padding: 0px;
+            padding: 4px;
         }
     </style>
 
@@ -32,36 +53,101 @@
 
     <script src="/js/cryptojslib/rollups/aes.js"></script>
     <script src="/js/cryptojslib/rollups/pbkdf2.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js" integrity="sha256-lDaoGuONbVHFEV6ZW3GowBu4ECOTjDE14hleNVBvDW8=" crossorigin="anonymous"></script>
+    <script src="/js/quill.js"></script>
+    <link rel="stylesheet" href="/css/quill.snow.css">
     
     <link rel="stylesheet" href="/css/bootstrap.min.css">
   </head>
 	<body>
-        <nav class="navbar navbar-inverse">
-        <div class="container-fluid">
-            <div class="navbar-header">
-            <a class="navbar-brand" href="#">syncpad server</a>
-            </div>
-            <ul class="nav navbar-nav">
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-            </ul>
-        </div>
-        </nav>
-		<div class="container">
-			<% if (user) { %>
-			<p>Hello, <%= user.username %>.</p><br>
-			<% } %>
+        <%- include('../partials/header', {user: user}) %>
 
-            <% if (login) { %>
-            - <%= login.username %><br>
-            - <%= login.password %>
-            <% } %>
+		<div class="container">
+            <div id="toolbar">
+                <select class="ql-size">
+                    <option value="huge"></option>
+                    <option value="large"></option>
+                    <option selected></option>
+                    <option value="small"></option>
+                </select>
+                <button class="ql-bold"></button>
+                <button class="ql-italic"></button>
+                <button class="ql-underline"></button>
+                <button class="ql-code-block" value="sub"></button>
+            </div>
+            <div id="editor"></div>
 		</div>
 	</body>
 
+    <input type="hidden" id="key" value="<%= key %>">
+    <input type="hidden" id="roomId" value="<%= roomId %>">
+    <input type="hidden" id="sid" value="<%= sid %>">
+
     <script>
+        function getCookie(cname) 
+        {
+            var name = cname + "=";
+            var decodedCookie = decodeURIComponent(document.cookie);
+
+            console.log(document.cookie);
+            console.log(decodedCookie);
+
+            var ca = decodedCookie.split(';');
+            for(var i = 0; i <ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+
         $(function()
         {
+            var sid = getCookie('connect.sid');
+            console.log($('#sid').val());
+
+            var socket = io('https://syncpad.ikonzeh.org:8443',
+            {
+                query: 'session_id=' + $('#sid').val()
+            }
+            );
+
+            socket.on('connect', function()
+            {
+                /*
+                socket.emit('authentication', 
+                { 
+                    "username": "<%= user.username %>", 
+                    "password": "<%= pass %>", 
+                    "editor_room_id" : "<%= roomId %>"
+                });
+
+                socket.on('unauthorized', function(err)
+                {
+                    console.log(err.message);
+                    socket.close();
+                });
+                */
+
+                socket.on('authenticated', function() 
+                {
+                    console.log('socket:authenticated');
+                });
+            });
+
+            var editor = new Quill('#editor', 
+            {
+                modules: {
+                    toolbar : '#toolbar'
+                }, 
+                theme: 'snow'
+            });
+            
             //TODO Jquery Validation
             
             $('.alert .close').on('click', function(e) 
@@ -90,11 +176,6 @@
                     $("#alert-error").slideUp(500);
                 });
             }
-
-            $('#encryption_key_btn').click(function()
-            {
-                $('#encryption_key').val(CryptoJS.lib.WordArray.random(128/8));
-            });
         });
     </script>
 </html>
