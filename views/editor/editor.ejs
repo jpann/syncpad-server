@@ -1,0 +1,213 @@
+<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Editor</title>
+    <style>
+        html {
+            height: 100%;
+        }
+        body 
+        { 
+            font: 10px Helvetica, Arial; 
+            margin: 0;
+            height: 100%;
+        }
+        #container 
+        { 
+            height: 100%;
+        }
+		 #toolbar {
+            border-bottom: 1px solid #E8E8E8;
+            background-color: #F5F5F5;
+            min-height: 35px;
+            max-height: 35px;
+            height: 35px;
+            padding: 4px;
+        }
+        #editor {
+            background-color: #FFFFFF;
+            height: calc(100% - 35px);
+        }
+        #status-bar {
+            background-color: #F5F5F5;
+            height: 10px;
+            padding: 5px;
+        }
+        .qt-toolbar.qt-snow
+        {
+            padding: 4px;
+        }
+    </style>
+    <script src="/js/jquery-3.2.1.min.js"></script>
+    
+    <script src="/js/jquery.validate.js"></script>
+    <script src="/js/additional-methods.js"></script>
+    <script src="/js/cryptojslib/rollups/aes.js"></script>
+    <script src="/js/cryptojslib/rollups/pbkdf2.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js" integrity="sha256-lDaoGuONbVHFEV6ZW3GowBu4ECOTjDE14hleNVBvDW8=" crossorigin="anonymous"></script>
+    <script src="/js/quill.js"></script>
+    <link rel="stylesheet" href="/css/quill.snow.css">
+    
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+  </head>
+	<body>
+        <%- include('../partials/header', {user: user}) %>
+
+		<div class="container">
+            <div id="toolbar">
+                <select class="ql-size">
+                    <option value="huge"></option>
+                    <option value="large"></option>
+                    <option selected></option>
+                    <option value="small"></option>
+                </select>
+                <button class="ql-bold"></button>
+                <button class="ql-italic"></button>
+                <button class="ql-underline"></button>
+                <button class="ql-code-block" value="sub"></button>
+            </div>
+            <div id="editor"></div>
+		</div>
+	</body>
+    <input type="hidden" id="key" value="<%= key %>">
+    <input type="hidden" id="roomId" value="<%= roomId %>">
+    <input type="hidden" id="sid" value="<%= sid %>">
+
+    <script>
+        $(function()
+        {
+            var editor = new Quill('#editor', 
+            {
+                modules: {
+                    toolbar : '#toolbar'
+                }, 
+                theme: 'snow'
+            });
+
+            var sid = $('#sid').val();
+            var roomId = $('#roomId').val();
+            var key = $('#key').val();
+
+            console.log("sid: " + sid);
+            var socket = io('//' + window.location.host,
+            {
+                query: 'session_id=' + sid + '&roomId=' + roomId
+            });
+
+            socket.on('connect', function()
+            {
+                console.log('socket:connect: ' + sid + '; roomId: ' + roomId);
+
+                socket.on('authenticated', function() 
+                {
+                    console.log('socket:authenticated');
+                });
+
+                socket.on('connect_error', function(err)
+                {
+                    console.log('socket:error:connection: ' + err.message);
+                });
+
+                socket.on('connect_timeout', function(err)
+                {
+                    console.log('socket:error:timeout: ' + err.message);
+                });
+
+                socket.on('error', function(err)
+                {
+                    console.log('socket:error: ' + err.message);
+                });
+
+                socket.on('disconnect', function(err)
+                {
+                    console.log('Socket - Disconnected: ' + err.message);
+                });
+
+                // Received request to get latest text body
+                socket.on('text:latest', function(data)
+                {
+                    var m_user = data.user;
+                    var m_address = data.address;
+                    var m_socketId = data.id;
+
+                    var text = editor.getContents();
+                    console.log(JSON.stringify(text));
+
+                    //TODO Encrypt
+
+                    socket.emit('text:refresh', { 'id' : m_socketId, 'text' : text });
+                });
+
+                socket.on('text', function(data)
+                {
+                    var m_user = data.user;
+                    var m_text = data.text;
+                    var m_address = data.address;
+                    var m_encrypted = data.encrypted;
+                    var m_hostname = data.hostname;
+
+                    console.log("socket - text: " + JSON.stringify(data));
+
+                    //TODO decrypt
+
+                    editor.updateContents(m_text, "silent");
+                });
+
+                socket.on('text:typing', function(data)
+                {
+                    console.log("socket - text:typing - " + data.hostname);
+                });
+
+                socket.on('text:refresh', function(data)
+                {
+                    console.log("socket - text:refresh");
+
+                    var m_text = data.text;
+                    var m_hostname = data.hostname;
+
+                    // TODO Decrypt
+                    editor.updateContents(m_text, "silent");
+
+                    //ipc.send('socket:text:refresh', data);
+                });
+            });
+
+            editor.on('text-change', function(delta, oldDelta, source) 
+            {
+                if (source == 'user')
+                {
+                    // Send editor delta of change instead
+                    var text = delta;
+
+                    socket.emit('text',  { 'text' : text, 'encrypted' : false, 'hostname' : 'web' })
+                }
+            });
+            
+            //TODO Jquery Validation
+            
+            $('.alert .close').on('click', function(e) 
+            {
+                $(this).parent().hide();
+            });
+            function successAlert(msg)
+            {
+                $('#alert-success-txt').text(msg);
+                $('#alert-success').show();
+                $("#alert-success").fadeTo(2000, 500).slideUp(500, function()
+                {
+                    $("#alert-success").slideUp(500);
+                });
+            }
+            function errorAlert(msg)
+            {
+                $('#alert-error-txt').text(msg);
+                $('#alert-error').show();
+                $("#alert-error").fadeTo(2000, 500).slideUp(500, function()
+                {
+                    $("#alert-error").slideUp(500);
+                });
+            }
+        });
+    </script>
+</html>
