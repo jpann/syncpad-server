@@ -59,7 +59,7 @@ sockets.init = function(server)
         // Check if max connections is exceeded
         var numberOfClients = connectedClients.reduce(function(p,c)
         {
-            if (username.toLowerCase() == c.client.user.toLowerCase())
+            if (username.toLowerCase() == c.client.user.username.toLowerCase())
             {
                 p++;
             }
@@ -148,7 +148,7 @@ sockets.init = function(server)
 
         socket.on('text:refresh', function(msg)
         {
-            var user = socket.client.username;
+            var user = socket.request.user.username;
             var address = utils.getIpAddress(socket.request.connection.remoteAddress);
             var id = msg.id;
             var text = msg.text;
@@ -163,6 +163,7 @@ sockets.init = function(server)
     {
         var user = socket.request.user;
 
+        socket.client.user = user;
         socket.client.connectedTime = moment(new Date()).format();
         socket.client.lastUpdateTime = moment(new Date()).format();
 
@@ -189,6 +190,7 @@ sockets.init = function(server)
                 "id": socket.id
             });
     }
+
     function getSocketsInRoom(room)
     {
         let sockets = [];
@@ -264,7 +266,7 @@ sockets.init = function(server)
 
         for (var i = 0; i < connectedClients.length; i++)
         {
-            if (username.toLowerCase() == connectedClients[i].client.user.toLowerCase())
+            if (username.toLowerCase() == connectedClients[i].client.user.username.toLowerCase())
             {
                 count++;
             }
@@ -273,6 +275,7 @@ sockets.init = function(server)
         return count;
     }
 
+    return io;
 }
 
 module.exports = sockets;

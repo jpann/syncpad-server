@@ -1,8 +1,11 @@
 var express = require('express');
 var passport = require('passport');
-var router = express.Router();
-var routerUtil = require('./routeUtil');
+var moment = require('moment');
 
+var router = express.Router();
+
+var utils = require('./../utils.js');
+var routerUtil = require('./routeUtil');
 var database = require('./../database');
 
 router.post('/login',
@@ -177,14 +180,16 @@ router.get('/listClients',
     {
         try
         {
+            var io = req.app.get('socketio');
+
             // get list of clients
-            var sockets = Object.keys(socket.sockets.sockets);
+            var sockets = Object.keys(io.sockets.sockets);
             var clients = [];
 
             for (var i = 0; i < sockets.length; i++)
             {
                 var socketId = sockets[i];
-                var client = socket.sockets.connected[socketId];
+                var client = io.sockets.connected[socketId];
 
                 if (client)
                 {
@@ -197,10 +202,10 @@ router.get('/listClients',
                     {
                         "roomId" : client.roomId,
                         "socketId" : socketId,
-                        "username" : client.client.user,
+                        "username" : client.client.user.username,
                         "rooms" : Object.keys(client.rooms),
                         "remoteAddress" : remoteAddress,
-                        "user_id" : client.client.user_id,
+                        "user_id" : client.client.user.user_id,
                         "namespace" : client.nsp.name,
                         "connectedTime" : connectedTime.format('YYYY MM DD, h:mm:ss a'),
                         "lastUpdateTime" : lastUpdateTime.format('YYYY MM DD, h:mm:ss a'),

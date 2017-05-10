@@ -15,7 +15,6 @@ const SESSION_SECRET = process.env.SESSION_SECRET || 'keyboard cat';
 const MIN_PASSWORD_LENGTH = process.env.MIN_PASSWORD_LENGTH || 10;
 
 var index = require('./routes/index');
-var users = require('./routes/users');
 var api = require('./routes/api');
 
 var app = express();
@@ -102,7 +101,6 @@ passport.deserializeUser(function(id, cb)
 });
 
 app.use('/', index);
-//app.use('/users', users);
 app.use('/api', api);
 
 // catch 404 and forward to error handler

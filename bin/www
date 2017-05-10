@@ -7,8 +7,8 @@ const USE_SSL = process.env.USE_SSL || 'N';
 const SSL_KEY = process.env.SSL_KEY || './certs/syncpad.pem';
 const SSL_CERT = process.env.SSL_CERT || './certs/syncpad.crt';
 
-var app = require('../app');
 var sockets = require('../socketServer')
+var app = require('../app');
 
 var debug = require('debug')('test-server:server');
 var http = require('http');
@@ -33,12 +33,12 @@ else
 var port = normalizePort(PORT);
 app.set('port', port);
 
-
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
 
-sockets.init(server);
+var io = sockets.init(server);
+app.set('socketio', io);
 
 function normalizePort(val)
 {
