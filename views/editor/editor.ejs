@@ -7,16 +7,19 @@
     <style>
         html {
             height: 100%;
+            width: 100%;
         }
 
         body {
             font: 10px Helvetica, Arial;
             margin: 0;
             height: 100%;
+            width: 100%;
         }
 
         #container {
-            height: 100%;
+            height: 90%;
+            width: 100%;
         }
 
         #toolbar {
@@ -31,6 +34,7 @@
         #editor {
             background-color: #FFFFFF;
             height: calc(100% - 35px);
+            width: 100%;
         }
 
         .qt-toolbar.qt-snow {
@@ -48,6 +52,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js" integrity="sha256-lDaoGuONbVHFEV6ZW3GowBu4ECOTjDE14hleNVBvDW8="
         crossorigin="anonymous"></script>
     <script src="/js/quill.js"></script>
+    <script src="/js/moment.js"></script>
     <link rel="stylesheet" href="/css/quill.snow.css">
 
     <link rel="stylesheet" href="/css/bootstrap.min.css">
@@ -58,6 +63,10 @@
 
         <div class="container">
             <div id="toolbar">
+                <button id="debug-info-button" class="glyphicon glyphicon glyphicon-eye-open" data-toggle="tooltip" data-placement="top" title="Debug Info"></button>
+                <button id="info-button" class="glyphicon glyphicon glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="top" title="Editor Info"></button>
+                <button id="users-button" class="glyphicon glyphicon glyphicon glyphicon glyphicon-user" data-toggle="tooltip" data-placement="top" title="Users"></button>
+
                 <select class="ql-size">
                     <option value="huge"></option>
                     <option value="large"></option>
@@ -71,13 +80,6 @@
             </div>
             <div id="editor"></div>
             <br/><br/>
-            <div class="panel panel-primary">
-                <div class="panel-heading">Debug Room Info</div>
-                <div class="panel-body" style="min-height: 150px; max-height: 150px; overflow-y: scroll">
-                    <ul class="list-group" id="status-list">
-                    </ul>
-                </div>
-            </div>
         </div>
 
         <div class="modal fade" id="settings-modal" tabindex="-1" role="dialog">
@@ -87,15 +89,98 @@
                         <h4 class="modal-title">Editor Room Settings</h4>
                     </div>
                     <div class="modal-body">
-                        <h6>Encryption Key:</h6>
+                        <h6>Enter encryption key you will use for transmissions in this editor:</h6>
                         <p>
                             <input type="text" class="form-control encryption-key-text" id="encryption-key-text" />
+                        </p>
+                        <button type="button" class="btn btn-default generate-key" id="generate-key">Generate Key</button>
+                        <br/><br/>
+
+                        <h6>You can share this editor by providing the link below.
+                        <br/><br/>
+                        <b>Users joining this room will need to enter the encryption key you are using above.</b>
+                        </h6>
+                        <p>
+                            <input type="text" class="form-control" id="share-url" readonly/>
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" id="cancel" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-default connect" id="connect">Connect</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="info-modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Editor Room Info</h4>
+                    </div>
+                    <div class="modal-body">
+                        <h6>Room ID:</h6>
+                        <p>
+                            <input type="text" class="form-control roomId-text" id="roomId-text" readonly/>
+                        </p>
+                        <h6>Encryption Key:</h6>
+                        <p>
+                            <input type="text" class="form-control" id="encryption-key" readonly/>
                         </p>
                         <br>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default generate-key" id="generate-key">Generate Key</button>
-                        <button type="button" class="btn btn-default connect" id="connect">Connect</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="users-modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Connected Users</h4>
+                    </div>
+                    <div class="modal-body">
+                        <table id="user-table" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th class="col-md-1"><small>Username</small></th>
+                                    <th class="col-md-2"><small>Time Connected</small></th>
+                                    <th class="col-md-2"><small>Time Idle</small></th>
+                                    <th class="col-md-4"><small>Remote Address</small></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="debug-modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Editor Room Debug Info</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="panel panel-primary">
+                            <div class="panel-heading">Debug Room Info</div>
+                            <div class="panel-body" style="min-height: 150px; max-height: 300px; overflow-y: scroll">
+                                <ul class="list-group" id="status-list">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -126,16 +211,85 @@
 <script>
     $('document').ready(function()
     {
-        //$('#settings-modal').modal('show');
+        
     });
 
     $(function()
     {
+        $('#share-url').val(window.location.href);
         $('#settings-modal').modal('show');
+
+        $('#users-button').click(function()
+        {
+            var roomId = $('#roomId').val();
+
+            $.ajax(
+            {
+                url: '/api/users/' + roomId,
+                type: "GET",
+                xhrFields: {
+                    withCredentials: true
+                },
+                dataType: "json",
+                contentType: "application/json",
+                cache: false,
+                timeout: 5000,
+                complete: function() 
+                {
+                },
+
+                success: function(data) 
+                {
+                    console.log(data);
+                    
+                    $('#user-table tbody').empty();
+
+                    $.each(data, function(id)
+                    {
+                        var client = data[id];
+
+                        $('#user-table tbody').append(`
+                        <tr>
+                            <td><a href="/profile/${client.user_id}">${client.username}</a></td>
+                            <td>${moment(client.connectedTime, "YYYY MM DD, h:mm:ss a").fromNow()}</td>
+                            <td>${moment(client.lastUpdateTime, "YYYY MM DD, h:mm:ss a").fromNow()}</td>
+                            <td>${client.remoteAddress}</td>
+                        </tr>
+                        `);
+                    });
+                },
+
+                error: function(jqXHR, textStatus, err)
+                {
+                    console.warn(jqXHR.responseJSON.message)
+                    console.warn('text status '+textStatus+', err '+err)
+                },
+            });
+
+             $('#users-modal').modal('toggle');
+        });
+
+        $('#info-button').click(function()
+        {
+            $('#roomId-text').val($('#roomId').val());
+            $('#encryption-key').val($('#key').val());
+
+            $('#info-modal').modal('toggle');
+        });
+
+        $('#debug-info-button').click(function()
+        {
+            $('#debug-modal').modal('toggle');
+        });
 
         $('.generate-key').click(function()
         {
             generateKey();
+        });
+
+        $('#cancel').click(function()
+        {
+            window.location.replace("/");
         });
 
         $('.connect').click(function()
@@ -216,6 +370,8 @@
 
     function updateStatus(msg)
     {
+        msg = `[${moment().format("MM/DD/YYYY h:mm:ss a")}]: ${msg}`;
+
         $('#status-list').prepend($('<li class="list-group-item">').text(msg));;
     }
 
