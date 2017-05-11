@@ -1,7 +1,7 @@
 var express = require('express');
 var passport = require('passport');
 var moment = require('moment');
-
+var _ = require('underscore');
 var router = express.Router();
 
 var utils = require('./../utils.js');
@@ -256,6 +256,75 @@ router.post('/updateUserProfile',
                     res.status(500).json({ "status": "error", "message": err.message });
                 }
             });
+        }
+        catch (err)
+        {
+            console.log(err);
+
+            res.status(500).json({ "status": "error", "message": err.message });
+        }
+    });
+
+router.get('/users/:roomId',
+    require('connect-ensure-login').ensureLoggedIn(),
+    function(req, res, next)
+    {
+        try
+        {
+            var roomId = req.params.roomId;
+            var userId = req.user.user_id;
+            
+            if (!roomId)
+            {
+                res.status(500).json({ "status": "error", "message": "Invalid roomId" });
+            }
+
+            var io = req.app.get('socketio');
+
+            // get list of clients
+            var sockets = Object.keys(io.sockets.adapter.rooms[roomId].sockets);
+            var userInRoom = _.find(sockets, function(id)
+            {
+                var socket = io.sockets.connected[id];
+
+                if (socket.client.user.user_id == userId)
+                {
+                    return true;
+                }
+            });
+
+            if (!userInRoom)
+            {
+                res.status(500).json({ "status": "error", "message": "Only users in the room can do this action." });
+            }
+
+            var clients = [];
+
+            for (var i = 0; i < sockets.length; i++)
+            {
+                var socketId = sockets[i];
+                var socket = io.sockets.connected[socketId];
+
+                if (socket)
+                {
+                    var connectedTime = moment(socket.client.connectedTime);
+                    var lastUpdateTime = moment(socket.client.lastUpdateTime);
+
+                    var remoteAddress = utils.getIpAddress(socket.client.conn.remoteAddress); 
+
+                    clients.push(
+                    {
+                        "roomId" : socket.roomId,
+                        "username" : socket.client.user.username,
+                        "remoteAddress" : remoteAddress,
+                        "user_id" : socket.client.user.user_id,
+                        "connectedTime" : connectedTime.format('YYYY MM DD, h:mm:ss a'),
+                        "lastUpdateTime" : lastUpdateTime.format('YYYY MM DD, h:mm:ss a'),
+                    });
+                }
+            }
+
+            res.json(clients);
         }
         catch (err)
         {
