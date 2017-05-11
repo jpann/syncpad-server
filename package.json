@@ -30,6 +30,7 @@
     "passport.socketio": "^3.7.0",
     "password-hash": "^1.2.2",
     "serve-favicon": "~2.4.2",
+    "shortid": "^2.2.8",
     "socket.io": "^2.0.1",
     "sqlite": "^2.7.0",
     "underscore": "^1.8.3"

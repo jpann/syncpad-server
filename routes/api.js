@@ -196,7 +196,7 @@ router.get('/listClients',
                     var connectedTime = moment(client.client.connectedTime);
                     var lastUpdateTime = moment(client.client.lastUpdateTime);
 
-                    var remoteAddress = utils.getIpAddress(client.client.conn.remoteAddress);
+                    var remoteAddress = utils.getIpAddress(client.client.conn.remoteAddress); 
 
                     clients.push(
                     {

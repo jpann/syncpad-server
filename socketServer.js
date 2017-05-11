@@ -9,6 +9,7 @@ var utils = require('./utils.js');
 var database = require('./database');
 
 const SESSION_SECRET = process.env.SESSION_SECRET || 'keyboard cat';
+const ROOMID_MIN_LENGTH = 8;
 
 var sockets = {};
 
@@ -34,7 +35,7 @@ sockets.init = function(server)
     {
         var roomId = socket.handshake.query.roomId;
 
-        if (roomId)
+        if (roomId && roomId.length >= ROOMID_MIN_LENGTH)
         {
             socket.roomId = roomId;
 
@@ -93,13 +94,17 @@ sockets.init = function(server)
 
         var roomId = socket.roomId;
 
-        socket.emit('authenticated');
+        socket.emit('authenticated',
+        {
+            "roomId" : roomId
+        });
 
         postAuthentication(socket);
 
         socket.on('disconnect', function()
         {
-            console.log(`Disconnected: '${socket.request.user.username}' [${utils.getIpAddress(socket.request.connection.remoteAddress)}].`);
+            var address = utils.getIpAddress(socket.request.connection.remoteAddress);
+            console.log(`Disconnected: '${socket.request.user.username}' [${address}].`);
 
             // Remove from connectedClients
             removeConnectedClient(socket);
@@ -107,7 +112,12 @@ sockets.init = function(server)
             // Update last connection date time
             //updateLastConnectionDateTime(socket.request.user.user_id, moment(new Date()).format());
 
-            socket.broadcast.to(socket.roomId).emit('room:leave', { "room": socket.roomId, "user": socket.request.user.username });
+            socket.broadcast.to(socket.roomId).emit('room:leave', 
+            { 
+                "room": socket.roomId, 
+                "user": socket.request.user.username,
+                "address" : address
+            });
         });
 
         // Client text update
@@ -117,6 +127,8 @@ sockets.init = function(server)
             var m_text = msg.text;
             var m_hostname = msg.hostname;
             var m_encrypted = msg.encrypted;
+
+            //console.log(`text: user: ${user}; m_text: ${m_text}`)
 
             socket.broadcast.to(socket.roomId).emit('text',
                 {
@@ -161,13 +173,15 @@ sockets.init = function(server)
     // Functions
     function postAuthentication(socket)
     {
+        var address = utils.getIpAddress(socket.request.connection.remoteAddress);
+
         var user = socket.request.user;
 
         socket.client.user = user;
         socket.client.connectedTime = moment(new Date()).format();
         socket.client.lastUpdateTime = moment(new Date()).format();
 
-        console.log(`Authenticated: ${socket.request.user.username} [${utils.getIpAddress(socket.request.connection.remoteAddress)}]; room '${socket.roomId}'.`);
+        console.log(`Authenticated: ${socket.request.user.username} [${address}]; room '${socket.roomId}'.`);
 
         socket.join(socket.roomId);
 
@@ -177,7 +191,12 @@ sockets.init = function(server)
         // Update last connection date time
         updateLastConnectionDateTime(socket.request.user.user_id, moment(new Date()).format());
 
-        socket.broadcast.to(socket.roomId).emit('room:join', { "room": socket.roomId, "user": socket.request.user.username });
+        socket.broadcast.to(socket.roomId).emit('room:join', 
+        { 
+            "room": socket.roomId, 
+            "user": socket.request.user.username,
+            "address" : address
+        });
 
         // Emit to every other client in the room asking them to send back a text:refresh with the latest text
         emitToOthersInRoom(

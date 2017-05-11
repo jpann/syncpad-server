@@ -147,7 +147,7 @@ $(function ()
             $('#user-table tbody').append(`
             <tr>
                 <td><a href="/profile/${client.user_id}">${client.username}</a></td>
-                <td>${client.roomId}</td>
+                <td><a href="/editor/${client.roomId}" target="_blank">${client.roomId}</a></td>
                 <td>${client.namespace}</td>
                 <td>${moment(client.connectedTime, "YYYY MM DD, h:mm:ss a").fromNow()}</td>
                 <td>${moment(client.lastUpdateTime, "YYYY MM DD, h:mm:ss a").fromNow()}</td>

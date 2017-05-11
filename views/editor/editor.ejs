@@ -1,23 +1,25 @@
 <!doctype html>
 <html>
-  <head>
+
+<head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Editor</title>
     <style>
         html {
             height: 100%;
         }
-        body 
-        { 
-            font: 10px Helvetica, Arial; 
+
+        body {
+            font: 10px Helvetica, Arial;
             margin: 0;
             height: 100%;
         }
-        #container 
-        { 
+
+        #container {
             height: 100%;
         }
-		 #toolbar {
+
+        #toolbar {
             border-bottom: 1px solid #E8E8E8;
             background-color: #F5F5F5;
             min-height: 35px;
@@ -25,36 +27,36 @@
             height: 35px;
             padding: 4px;
         }
+
         #editor {
             background-color: #FFFFFF;
             height: calc(100% - 35px);
         }
-        #status-bar {
-            background-color: #F5F5F5;
-            height: 10px;
-            padding: 5px;
-        }
-        .qt-toolbar.qt-snow
-        {
+
+        .qt-toolbar.qt-snow {
             padding: 4px;
         }
     </style>
     <script src="/js/jquery-3.2.1.min.js"></script>
-    
+
     <script src="/js/jquery.validate.js"></script>
     <script src="/js/additional-methods.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+
     <script src="/js/cryptojslib/rollups/aes.js"></script>
     <script src="/js/cryptojslib/rollups/pbkdf2.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js" integrity="sha256-lDaoGuONbVHFEV6ZW3GowBu4ECOTjDE14hleNVBvDW8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js" integrity="sha256-lDaoGuONbVHFEV6ZW3GowBu4ECOTjDE14hleNVBvDW8="
+        crossorigin="anonymous"></script>
     <script src="/js/quill.js"></script>
     <link rel="stylesheet" href="/css/quill.snow.css">
-    
-    <link rel="stylesheet" href="/css/bootstrap.min.css">
-  </head>
-	<body>
-        <%- include('../partials/header', {user: user}) %>
 
-		<div class="container">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+</head>
+
+<body>
+    <%- include('../partials/header', {user: user}) %>
+
+        <div class="container">
             <div id="toolbar">
                 <select class="ql-size">
                     <option value="huge"></option>
@@ -68,146 +70,306 @@
                 <button class="ql-code-block" value="sub"></button>
             </div>
             <div id="editor"></div>
-		</div>
-	</body>
-    <input type="hidden" id="key" value="<%= key %>">
-    <input type="hidden" id="roomId" value="<%= roomId %>">
-    <input type="hidden" id="sid" value="<%= sid %>">
+            <br/><br/>
+            <div class="panel panel-primary">
+                <div class="panel-heading">Debug Room Info</div>
+                <div class="panel-body" style="min-height: 150px; max-height: 150px; overflow-y: scroll">
+                    <ul class="list-group" id="status-list">
+                    </ul>
+                </div>
+            </div>
+        </div>
 
-    <script>
-        $(function()
+        <div class="modal fade" id="settings-modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Editor Room Settings</h4>
+                    </div>
+                    <div class="modal-body">
+                        <h6>Encryption Key:</h6>
+                        <p>
+                            <input type="text" class="form-control encryption-key-text" id="encryption-key-text" />
+                        </p>
+                        <br>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default generate-key" id="generate-key">Generate Key</button>
+                        <button type="button" class="btn btn-default connect" id="connect">Connect</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="error-modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Editor Room Error</h4>
+                    </div>
+                    <div class="modal-body">
+
+                        <br>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+</body>
+<input type="hidden" id="key" value="">
+<input type="hidden" id="roomId" value="<%= roomId %>">
+<input type="hidden" id="sid" value="<%= sid %>">
+
+<script>
+    $('document').ready(function()
+    {
+        //$('#settings-modal').modal('show');
+    });
+
+    $(function()
+    {
+        $('#settings-modal').modal('show');
+
+        $('.generate-key').click(function()
         {
-            var editor = new Quill('#editor', 
+            generateKey();
+        });
+
+        $('.connect').click(function()
+        {
+            var key = $('.encryption-key-text').val();
+
+            if (key)
+            {
+                $('#key').val(key);
+
+                $('#settings-modal').modal('toggle');
+
+                var sid = $('#sid').val();
+                var roomId = $('#roomId').val();
+
+                console.log(`Connect.click - Sid: ${sid}; RoomID: ${roomId}; key: ${key}`);
+
+                if (sid && roomId && key)
+                {
+                    //TODO Connect
+                    console.log("connecting...");
+
+                    updateStatus(`Connecting to room ${roomId}...`);
+                    connect(sid, roomId, key);
+                }
+                else
+                {
+                    console.log("no sid, room id, or key")
+                }
+            }
+        });
+
+        $('.alert .close').on('click', function(e) 
+        {
+            $(this).parent().hide();
+        });
+
+        function successAlert(msg)
+        {
+            $('#alert-success-txt').text(msg);
+            $('#alert-success').show();
+            $("#alert-success").fadeTo(2000, 500).slideUp(500, function()
+            {
+                $("#alert-success").slideUp(500);
+            });
+        }
+        function errorAlert(msg)
+        {
+            $('#alert-error-txt').text(msg);
+            $('#alert-error').show();
+            $("#alert-error").fadeTo(2000, 500).slideUp(500, function()
+            {
+                $("#alert-error").slideUp(500);
+            });
+        }
+    });
+
+    function generateKey()
+    {
+        var key = CryptoJS.lib.WordArray.random(128 / 8).toString();
+
+        $('#encryption-key-text').val(key);
+    }
+
+    function encrypt(text, key)
+    {
+        var e_text = CryptoJS.AES.encrypt(text, key).toString();
+
+        return e_text;
+    }
+
+    function decrypt(text, key)
+    {
+        var d_text = CryptoJS.AES.decrypt(text, key).toString(CryptoJS.enc.Utf8);
+
+        return d_text;
+    }
+
+    function updateStatus(msg)
+    {
+        $('#status-list').prepend($('<li class="list-group-item">').text(msg));;
+    }
+
+    function connect(sid, roomId, key)
+    {
+        console.log(`Connect - Sid: ${sid}; RoomID: ${roomId}; key: ${key}`);
+
+        var editor = new Quill('#editor',
             {
                 modules: {
-                    toolbar : '#toolbar'
-                }, 
+                    toolbar: '#toolbar'
+                },
                 theme: 'snow'
             });
 
-            var sid = $('#sid').val();
-            var roomId = $('#roomId').val();
-            var key = $('#key').val();
-
-            console.log("sid: " + sid);
-            var socket = io('//' + window.location.host,
+        var socket = io('//' + window.location.host,
             {
                 query: 'session_id=' + sid + '&roomId=' + roomId
             });
 
-            socket.on('connect', function()
+        socket.on('connect', function()
+        {
+            console.log('socket:connect: ' + sid + '; roomId: ' + roomId);
+
+            updateStatus(`You connected successfully to room ${roomId}!`);
+
+            socket.on('authenticated', function(data) 
             {
-                console.log('socket:connect: ' + sid + '; roomId: ' + roomId);
+                console.log('socket:authenticated');
 
-                socket.on('authenticated', function() 
-                {
-                    console.log('socket:authenticated');
-                });
-
-                socket.on('connect_error', function(err)
-                {
-                    console.log('socket:error:connection: ' + err.message);
-                });
-
-                socket.on('connect_timeout', function(err)
-                {
-                    console.log('socket:error:timeout: ' + err.message);
-                });
-
-                socket.on('error', function(err)
-                {
-                    console.log('socket:error: ' + err.message);
-                });
-
-                socket.on('disconnect', function(err)
-                {
-                    console.log('Socket - Disconnected: ' + err.message);
-                });
-
-                // Received request to get latest text body
-                socket.on('text:latest', function(data)
-                {
-                    var m_user = data.user;
-                    var m_address = data.address;
-                    var m_socketId = data.id;
-
-                    var text = editor.getContents();
-                    console.log(JSON.stringify(text));
-
-                    //TODO Encrypt
-
-                    socket.emit('text:refresh', { 'id' : m_socketId, 'text' : text });
-                });
-
-                socket.on('text', function(data)
-                {
-                    var m_user = data.user;
-                    var m_text = data.text;
-                    var m_address = data.address;
-                    var m_encrypted = data.encrypted;
-                    var m_hostname = data.hostname;
-
-                    console.log("socket - text: " + JSON.stringify(data));
-
-                    //TODO decrypt
-
-                    editor.updateContents(m_text, "silent");
-                });
-
-                socket.on('text:typing', function(data)
-                {
-                    console.log("socket - text:typing - " + data.hostname);
-                });
-
-                socket.on('text:refresh', function(data)
-                {
-                    console.log("socket - text:refresh");
-
-                    var m_text = data.text;
-                    var m_hostname = data.hostname;
-
-                    // TODO Decrypt
-                    editor.updateContents(m_text, "silent");
-
-                    //ipc.send('socket:text:refresh', data);
-                });
+                updateStatus(`You are now authenticated in room ${data.roomId}.`);
             });
 
-            editor.on('text-change', function(delta, oldDelta, source) 
+            socket.on('connect_error', function(err)
             {
-                if (source == 'user')
-                {
-                    // Send editor delta of change instead
-                    var text = delta;
+                console.log('socket:error:connection: ' + err.message);
 
-                    socket.emit('text',  { 'text' : text, 'encrypted' : false, 'hostname' : 'web' })
+                updateStatus(`connect_error: ${err.message}`);
+            });
+
+            socket.on('connect_timeout', function(err)
+            {
+                console.log('socket:error:timeout: ' + err.message);
+
+                updateStatus(`connect_timeout: ${err.message}`);
+            });
+
+            socket.on('error', function(err)
+            {
+                console.log('socket:error: ' + err.message);
+
+                updateStatus(`Error: ${err.message}`);
+            });
+
+            socket.on('disconnect', function(err)
+            {
+                console.log('Socket - Disconnected: ' + JSON.stringify(err));
+
+                updateStatus(`disconnect: ${err.message}`);
+            });
+
+            socket.on('room:join', function(data)
+            {
+                console.log('room:join ' + JSON.stringify(data));
+
+                updateStatus(`User ${data.user} joined the room from '${data.address}'.`);
+            });
+
+            socket.on('room:leave', function(data)
+            {
+                console.log('room:leave ' + JSON.stringify(data));
+
+                updateStatus(`User ${data.user} left the room from '${data.address}'.`);
+            });
+
+            // Received request to get latest text body
+            socket.on('text:latest', function(data)
+            {
+                var m_user = data.user;
+                var m_address = data.address;
+                var m_socketId = data.id;
+
+                var text = editor.getContents();
+                //console.log(JSON.stringify(text));
+
+                //TODO Encrypt
+                var data = JSON.stringify(text);
+                var e_text = encrypt(data, key);
+
+                socket.emit('text:refresh', { 'id': m_socketId, 'text': e_text });
+            });
+
+            socket.on('text', function(data)
+            {
+                var m_user = data.user;
+                var m_text = data.text;
+                var m_address = data.address;
+                var m_encrypted = data.encrypted;
+                var m_hostname = data.hostname;
+
+                //console.log("socket - text: " + JSON.stringify(data));
+
+                //TODO decrypt
+                var d_text = decrypt(m_text, key);
+                var data = JSON.parse(d_text);
+
+                editor.updateContents(data, "silent");
+            });
+
+            socket.on('text:typing', function(data)
+            {
+                console.log("socket - text:typing - " + data.hostname);
+            });
+
+            socket.once('text:refresh', function(data)
+            {
+
+                var m_text = data.text;
+                var m_hostname = data.hostname;
+
+                // TODO Decrypt
+                var d_text = decrypt(m_text, key);
+
+                if (d_text)
+                {
+                    var data = JSON.parse(d_text);
+
+                    editor.updateContents(data, "silent");
                 }
-            });
-            
-            //TODO Jquery Validation
-            
-            $('.alert .close').on('click', function(e) 
-            {
-                $(this).parent().hide();
-            });
-            function successAlert(msg)
-            {
-                $('#alert-success-txt').text(msg);
-                $('#alert-success').show();
-                $("#alert-success").fadeTo(2000, 500).slideUp(500, function()
+                else
                 {
-                    $("#alert-success").slideUp(500);
-                });
-            }
-            function errorAlert(msg)
+                    console.log("socket - text:refresh: failed parsing json")
+                }
+
+            });
+        });
+
+        editor.on('text-change', function(delta, oldDelta, source) 
+        {
+            if (source == 'user')
             {
-                $('#alert-error-txt').text(msg);
-                $('#alert-error').show();
-                $("#alert-error").fadeTo(2000, 500).slideUp(500, function()
-                {
-                    $("#alert-error").slideUp(500);
-                });
+                // Send editor delta of change instead
+                var text = delta;
+
+                var data = JSON.stringify(text);
+                var e_data = encrypt(data, key);
+
+                //console.log(`text-change: ${data} - e_data: ${e_data}`);
+
+                socket.emit('text', { 'text': e_data, 'encrypted': true, 'hostname': 'web' })
             }
         });
-    </script>
+    }
+
+</script>
+
 </html>
