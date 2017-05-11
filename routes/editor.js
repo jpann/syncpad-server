@@ -1,6 +1,8 @@
 var express = require('express');
 var passport = require('passport');
 var CryptoJS = require("crypto-js");
+var shortid = require('shortid');
+
 var _ = require('underscore');
 
 var router = express.Router();
@@ -8,16 +10,41 @@ var router = express.Router();
 var utils = require('./../utils.js');
 var routerUtil = require('./routeUtil');
 
-var editorRooms = [];
-
-function createRoom(req)
+function checkIfRoomExists(roomId, io)
 {
-    var io = req.app.get('socketio');
+    let socketObj = io.sockets.adapter.rooms;
 
-    var roomId = CryptoJS.lib.WordArray.random(128 / 8).toString();
-    var room = { 'roomId': roomId };
+    for (let id of Object.keys(socketObj))
+    {
+        if (id == roomId)
+            return true;
+    }
 
-    return room;
+    return false;
+}
+
+function cleanRoomId(id)
+{
+    const roomId = id.toLowerCase().replace(/[^A-Za-z0-9]/g, '-');
+    if (roomId.length >= 50)
+    {
+        return roomId.substr(0, 50);
+    }
+
+    return roomId;
+}
+
+function createRoom(req, res)
+{
+    var roomId = cleanRoomId(shortid.generate());
+
+    //const room = { 'roomId': roomId };
+
+    //editorRooms.push(room);
+    
+    console.log("Created new room: " + roomId);
+
+    res.redirect(`/editor/${roomId}`);
 }
 
 router.get('/',
@@ -26,7 +53,7 @@ router.get('/',
     {
         try
         {
-            res.render('editor/editorSetup', { user: req.user });
+            createRoom(req, res);
         }
         catch (err)
         {
@@ -34,6 +61,7 @@ router.get('/',
         }
     });
 
+/*
 router.post('/',
     require('connect-ensure-login').ensureLoggedIn(),
     function(req, res, next)
@@ -57,6 +85,7 @@ router.post('/',
             next(err);
         }
     });
+*/
 
 router.get('/:roomId',
     require('connect-ensure-login').ensureLoggedIn(),
@@ -64,29 +93,34 @@ router.get('/:roomId',
     {
         try
         {
-            var roomId = req.params.roomId;
+            var io = req.app.get('socketio');
 
-            var encryption_key = req.session['key'];
+            const roomId = req.params.roomId || false;
 
-            if (!encryption_key)
-                res.redirect('/editor');
+            //let roomExists = _.findWhere(editorRooms, { 'roomId': roomId }) || false;
+            let roomExists = checkIfRoomExists(roomId, io);
 
-            let roomExists = _.findWhere(editorRooms, { 'roomId': roomId }) || false;
+            /*
             if (roomExists)
             {
+            */
+                console.log(`Room ${roomId} exists. Joining room.`);
+
                 res.render('editor/editor',
                     {
-                        'user': req.user.username,
+                        'user': req.user,
                         'roomId': roomId,
-                        'key': encryption_key,
                         'sid': req.sessionID
                     });
+            /*
             }
             else
             {
+                console.log(`Room ${roomId} DOESNT exist. Joining room.`);
+
                 res.redirect('/editor');
             }
-
+            */
         }
         catch (err)
         {
