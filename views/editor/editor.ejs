@@ -5,20 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Editor</title>
     <style>
-        html {
+      html {
             height: 100%;
             width: 100%;
         }
-
         body {
             font: 10px Helvetica, Arial;
             margin: 0;
-            height: 100%;
+            height: calc(100% - 50px);
+            width: 100%;
+        }
+        #container {
+            height: 90%;
             width: 100%;
         }
 
-        #container {
-            height: 90%;
+        #editor-container
+        {
+            height: calc(100% - 50px);
             width: 100%;
         }
 
@@ -30,13 +34,11 @@
             height: 35px;
             padding: 4px;
         }
-
         #editor {
             background-color: #FFFFFF;
             height: calc(100% - 35px);
             width: 100%;
         }
-
         .qt-toolbar.qt-snow {
             padding: 4px;
         }
@@ -61,7 +63,7 @@
 <body>
     <%- include('../partials/header', {user: user}) %>
 
-        <div class="container">
+        <div class="container" id="editor-container">
             <div id="toolbar">
                 <button id="debug-info-button" class="glyphicon glyphicon glyphicon-eye-open" data-toggle="tooltip" data-placement="top" title="Debug Info"></button>
                 <button id="info-button" class="glyphicon glyphicon glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="top" title="Editor Info"></button>
@@ -249,7 +251,7 @@
 
                         $('#user-table tbody').append(`
                         <tr>
-                            <td><a href="/profile/${client.user_id}">${client.username}</a></td>
+                            <td>${client.username}</td>
                             <td>${moment(client.connectedTime, "YYYY MM DD, h:mm:ss a").fromNow()}</td>
                             <td>${moment(client.lastUpdateTime, "YYYY MM DD, h:mm:ss a").fromNow()}</td>
                             <td>${client.remoteAddress}</td>
