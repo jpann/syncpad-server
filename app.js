@@ -8,6 +8,8 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var moment = require('moment');
 var flash = require('connect-flash');
+var fs = require('fs');
+var rfs = require('rotating-file-stream');
 
 var database = require('./database');
 
@@ -29,10 +31,18 @@ var SQLiteStore = require('connect-sqlite3')(session);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(flash());
-app.use(logger('combined'));
+
+// Logging
+var logDirectory = path.join(__dirname, 'logs')
+fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
+var accessLogStream = rfs('access.log',
+    {
+        interval: '1d', // rotate daily
+        path: logDirectory
+    });
+
+app.use(logger('combined', { stream: accessLogStream }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
