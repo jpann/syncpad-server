@@ -8,6 +8,8 @@ var utils = require('./../utils.js');
 var routerUtil = require('./routeUtil');
 var database = require('./../database');
 
+const MIN_PASSWORD_LENGTH = process.env.MIN_PASSWORD_LENGTH || 10;
+
 router.post('/login',
     passport.authenticate('local'),
     function(req, res) 
@@ -32,7 +34,7 @@ router.post('/profile/update',
 
         try
         {
-            if (password.length < minPasswordLength)
+            if (password.length < MIN_PASSWORD_LENGTH)
                 throw new Error("Password is too short.");
 
             database.updatePassword(user_id, password, function(err, id)
@@ -88,7 +90,7 @@ router.post('/addUser',
 
         try
         {
-            if (password.length < minPasswordLength)
+            if (password.length < MIN_PASSWORD_LENGTH)
                 throw new Error("Password is too short.");
 
             database.addUser(username, password, false, function(err, user)
@@ -150,7 +152,7 @@ router.post('/updateUser',
 
         try
         {
-            if (password.length < minPasswordLength)
+            if (password.length < MIN_PASSWORD_LENGTH)
                 throw new Error("Password is too short.");
 
             database.updatePassword(user_id, password, function(err, id)
