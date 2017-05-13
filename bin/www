@@ -13,6 +13,7 @@ var app = require('../app');
 var debug = require('debug')('test-server:server');
 var http = require('http');
 var https = require('https');
+var fs = require('fs');
 
 if (USE_SSL == 'Y')
 {
