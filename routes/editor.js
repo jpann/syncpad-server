@@ -39,7 +39,7 @@ function cleanRoomId(id)
 function createRoom(req, res)
 {
     var roomId = cleanRoomId(shortid.generate());
-    
+
     console.log("Created new room: " + roomId);
 
     res.redirect(`/editor/${roomId}`);

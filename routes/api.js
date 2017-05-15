@@ -91,7 +91,7 @@ router.post('/addUser',
         try
         {
             if (password.length < MIN_PASSWORD_LENGTH)
-                throw new Error("Password is too short.");
+                res.status(500).json({ "status": "error", "message": "Password is too short."});
 
             database.addUser(username, password, false, function(err, user)
             {
