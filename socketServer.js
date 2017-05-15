@@ -5,17 +5,160 @@ var passportSocketIo = require("passport.socketio");
 var cookieParser = require('cookie-parser');
 var async = require('async');
 
+var _ = require('underscore');
+var shortid = require('shortid');
+var CryptoJS = require("crypto-js");
+var passwordHash = require('password-hash');
+
 var utils = require('./utils.js');
 var database = require('./database');
 
 const SESSION_SECRET = process.env.SESSION_SECRET || 'keyboard cat';
-const ROOMID_MIN_LENGTH = 8;
+const ROOMID_MIN_LENGTH = process.env.ROOMID_MIN_LENGTH || 8;
+const ROOM_PASSWORD_MIN_LENGTH = process.env.ROOM_PASSWORD_MIN_LENGTH || 6;
 
 var sockets = {};
 
 sockets.init = function(server)
 {
     let connectedClients = [];
+
+    let rooms = [];
+
+    //
+    // Rooms code
+    function checkIfRoomExists(roomId)
+    {
+        var roomExists = _.find(rooms, function(room)
+        {
+            if (room.roomId == roomId)
+            {
+                return true;
+            }
+        });
+
+        return roomExists;
+    }
+
+    function getRoom(roomId)
+    {
+        var room = _.findWhere(rooms, { 'roomId' : roomId });
+
+        return room;
+    }
+
+    function verifyRoomPassword(roomId, password)
+    {
+        var room = _.findWhere(rooms, { 'roomId' : roomId });
+
+        if (room)
+        {
+            //var verifyPassword = passwordHash.verify(password, room.password);
+            if (password == room.password)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function joinRoom(roomId, clientId, password)
+    {
+        if (checkIfRoomExists(roomId))
+        {
+            if (verifyRoomPassword(roomId, password))
+            {
+                return room = addClientToRoom(roomId, clientId);
+            }
+            else
+            {
+                return undefined;
+            }
+        }
+        else
+        {
+            if (password < ROOM_PASSWORD_MIN_LENGTH)
+                return null;
+                
+            // Create new room
+            var room = createRoom(roomId, password);
+
+            addClientToRoom(room.roomId, clientId);
+
+            return room;
+        }
+    }
+
+    function createRoom(roomId, password)
+    {
+        var rnd_password = shortid.generate();
+        var key = CryptoJS.lib.WordArray.random(128 / 8).toString();
+
+        var room = 
+        {
+            'roomId' : roomId,
+            'password' : password,
+            'key' : key,
+            'clients' : []
+        };
+
+        rooms.push(room);
+
+        return room;
+    }
+
+    function removeRoom(roomId)
+    {
+        var clientCount = _.find(rooms, function(room)
+        {
+            if (room.roomId == roomId)
+            {
+                return clientCount = room.clients.length;
+            }
+
+            return 0;
+        });
+
+        if (clientCount <= 0)
+            rooms = _.without(rooms, _.findWhere(rooms, { 'roomId' : roomId }));
+    }
+
+    function addClientToRoom(roomId, clientId)
+    {
+        var room = _.findWhere(rooms, { 'roomId' : roomId });
+
+        if (room)
+        {
+            var clientExists = _.findWhere(room.clients, { 'clientId' : clientId }) || false;
+
+            if (!clientExists)
+            {
+                room.clients.push({ 'clientId' : clientId  });
+            }
+
+            return room;
+        }
+        else
+        {
+            return undefined;
+        }
+    }
+
+    function removeClientFromRoom(roomId, clientId)
+    {
+        var room = _.findWhere(rooms, { 'roomId' : roomId });
+
+        if (room)
+        {
+            room.clients = _.without(room.clients, _.findWhere(room.clients, { 'clientId' : clientId }));
+            
+            if (room.clients.length < 1)
+            {
+                removeRoom(roomId);
+            }
+        }
+    }
 
     // socket.io setup
     let io = require('socket.io').listen(server);
@@ -94,12 +237,36 @@ sockets.init = function(server)
 
         var roomId = socket.roomId;
 
-        socket.emit('authenticated',
-        {
-            "roomId" : roomId
-        });
+        //
+        // Request room password
+        var roomId = socket.roomId;
+        var clientId = socket.id;
 
-        postAuthentication(socket);
+        socket.emit('room:auth', 
+            {
+                'roomId' : roomId
+            },
+            function(data)
+            {
+                var password = data.password;
+
+                var room = joinRoom(roomId, clientId, password);
+
+                if (room)
+                {
+                    postAuthentication(socket, room);
+                }
+                else
+                {
+                    socket.emit('unauthorized', 
+                    { 
+                        'message' : "Unable to join room.",
+                        'roomId' : roomId
+                    });
+
+                    socket.disconnect(true);
+                }
+            });
 
         socket.on('disconnect', function()
         {
@@ -108,6 +275,7 @@ sockets.init = function(server)
 
             // Remove from connectedClients
             removeConnectedClient(socket);
+            removeClientFromRoom(socket.roomId, socket.id);
 
             // Update last connection date time
             //updateLastConnectionDateTime(socket.request.user.user_id, moment(new Date()).format());
@@ -171,17 +339,27 @@ sockets.init = function(server)
 
     //
     // Functions
-    function postAuthentication(socket)
+    function postAuthentication(socket, room)
     {
         var address = utils.getIpAddress(socket.request.connection.remoteAddress);
 
         var user = socket.request.user;
+        var roomId = socket.roomId;
 
         socket.client.user = user;
         socket.client.connectedTime = moment(new Date()).format();
         socket.client.lastUpdateTime = moment(new Date()).format();
 
         console.log(`Authenticated: ${socket.request.user.username} [${address}]; room '${socket.roomId}'.`);
+
+        //var room = getRoom(roomId);
+
+        socket.emit('authenticated',
+        {
+            "roomId" : roomId,
+            'key' : room.key,
+            'password' : room.password
+        });
 
         socket.join(socket.roomId);
 
