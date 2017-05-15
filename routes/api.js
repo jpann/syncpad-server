@@ -198,7 +198,9 @@ router.get('/listClients',
                     var connectedTime = moment(client.client.connectedTime);
                     var lastUpdateTime = moment(client.client.lastUpdateTime);
 
-                    var remoteAddress = utils.getIpAddress(client.client.conn.remoteAddress); 
+                    var client_addr = client.request.headers['x-forwarded-for'] || client.request.connection.remoteAddress;
+
+                    var remoteAddress = utils.getIpAddress(client_addrr); 
 
                     clients.push(
                     {
@@ -312,7 +314,9 @@ router.get('/users/:roomId',
                     var connectedTime = moment(socket.client.connectedTime);
                     var lastUpdateTime = moment(socket.client.lastUpdateTime);
 
-                    var remoteAddress = utils.getIpAddress(socket.client.conn.remoteAddress); 
+                    var client_addr = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
+
+                    var remoteAddress = utils.getIpAddress(client_addr); 
 
                     clients.push(
                     {

@@ -80,7 +80,7 @@ sockets.init = function(server)
         {
             if (password < ROOM_PASSWORD_MIN_LENGTH)
                 return null;
-                
+
             // Create new room
             var room = createRoom(roomId, password);
 
@@ -233,7 +233,9 @@ sockets.init = function(server)
 
     io.on('connection', function(socket)
     {
-        console.log(`Connected: ${utils.getIpAddress(socket.request.connection.remoteAddress)}.`);
+        var client_addr = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
+
+        console.log(`Connected: ${utils.getIpAddress(client_addr)}.`);
 
         var roomId = socket.roomId;
 
@@ -270,7 +272,10 @@ sockets.init = function(server)
 
         socket.on('disconnect', function()
         {
-            var address = utils.getIpAddress(socket.request.connection.remoteAddress);
+            var client_addr = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
+
+
+            var address = utils.getIpAddress(client_addr);
             console.log(`Disconnected: '${socket.request.user.username}' [${address}].`);
 
             // Remove from connectedClients
@@ -311,7 +316,9 @@ sockets.init = function(server)
         socket.on('text:typing', function(msg)
         {
             var user = socket.request.user.username;
-            var address = utils.getIpAddress(socket.request.connection.remoteAddress);
+            var client_addr = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
+            var address = utils.getIpAddress(client_address);
+
             var typing = msg.is_typing;
             var hostname = msg.hostname;
 
@@ -329,7 +336,9 @@ sockets.init = function(server)
         socket.on('text:refresh', function(msg)
         {
             var user = socket.request.user.username;
-            var address = utils.getIpAddress(socket.request.connection.remoteAddress);
+            var client_addr = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
+
+            var address = utils.getIpAddress(client_addr);
             var id = msg.id;
             var text = msg.text;
 
@@ -341,7 +350,9 @@ sockets.init = function(server)
     // Functions
     function postAuthentication(socket, room)
     {
-        var address = utils.getIpAddress(socket.request.connection.remoteAddress);
+        var client_addr = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
+
+        var address = utils.getIpAddress(client_addr);
 
         var user = socket.request.user;
         var roomId = socket.roomId;
@@ -383,7 +394,7 @@ sockets.init = function(server)
             "text:latest",
             {
                 "user": socket.request.user.username,
-                "address": utils.getIpAddress(socket.request.connection.remoteAddress),
+                "address": address,
                 "id": socket.id
             });
     }
