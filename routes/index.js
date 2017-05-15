@@ -18,6 +18,8 @@ router.get('/',
 router.get('/login',
     function(req, res)
     {
+        var referrer = req.header('Referer');
+
         var e = req.flash('loginMessage')
         res.render('login', { errors :  e});
     });
@@ -25,7 +27,7 @@ router.get('/login',
 router.post('/login',
     passport.authenticate('local',
         {
-            successRedirect: '/',
+            successReturnToOrRedirect: '/',
             failureRedirect: '/login',
             failureFlash: true
         }));
