@@ -10,6 +10,8 @@ var router = express.Router();
 var utils = require('./../utils.js');
 var routerUtil = require('./routeUtil');
 
+const ROOMID_MIN_LENGTH = process.env.ROOMID_MIN_LENGTH || 8;
+
 function checkIfRoomExists(roomId, io)
 {
     let socketObj = io.sockets.adapter.rooms;
@@ -37,10 +39,6 @@ function cleanRoomId(id)
 function createRoom(req, res)
 {
     var roomId = cleanRoomId(shortid.generate());
-
-    //const room = { 'roomId': roomId };
-
-    //editorRooms.push(room);
     
     console.log("Created new room: " + roomId);
 
@@ -93,34 +91,19 @@ router.get('/:roomId',
     {
         try
         {
-            var io = req.app.get('socketio');
-
             const roomId = req.params.roomId || false;
 
-            //let roomExists = _.findWhere(editorRooms, { 'roomId': roomId }) || false;
-            let roomExists = checkIfRoomExists(roomId, io);
-
-            /*
-            if (roomExists)
-            {
-            */
-                console.log(`Room ${roomId} exists. Joining room.`);
-
-                res.render('editor/editor',
-                    {
-                        'user': req.user,
-                        'roomId': roomId,
-                        'sid': req.sessionID
-                    });
-            /*
-            }
-            else
-            {
-                console.log(`Room ${roomId} DOESNT exist. Joining room.`);
-
+            if (roomId.length < ROOMID_MIN_LENGTH)
                 res.redirect('/editor');
-            }
-            */
+
+            var io = req.app.get('socketio');
+
+            res.render('editor/editor',
+                {
+                    'user': req.user,
+                    'roomId': roomId,
+                    'sid': req.sessionID
+                });
         }
         catch (err)
         {
