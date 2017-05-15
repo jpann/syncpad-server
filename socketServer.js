@@ -233,7 +233,7 @@ sockets.init = function(server)
 
     io.on('connection', function(socket)
     {
-        var client_addr = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
+        var client_addr = socket.handshake.headers["x-real-ip"] || socket.request.connection.remoteAddress;
 
         console.log(`Connected: ${utils.getIpAddress(client_addr)}.`);
 
@@ -272,7 +272,7 @@ sockets.init = function(server)
 
         socket.on('disconnect', function()
         {
-            var client_addr = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
+            var client_addr = socket.handshake.headers["x-real-ip"] || socket.request.connection.remoteAddress;
 
 
             var address = utils.getIpAddress(client_addr);
@@ -316,7 +316,7 @@ sockets.init = function(server)
         socket.on('text:typing', function(msg)
         {
             var user = socket.request.user.username;
-            var client_addr = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
+            var client_addr = socket.handshake.headers["x-real-ip"] || socket.request.connection.remoteAddress;
             var address = utils.getIpAddress(client_address);
 
             var typing = msg.is_typing;
@@ -336,7 +336,7 @@ sockets.init = function(server)
         socket.on('text:refresh', function(msg)
         {
             var user = socket.request.user.username;
-            var client_addr = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
+            var client_addr = socket.handshake.headers["x-real-ip"] || socket.request.connection.remoteAddress;
 
             var address = utils.getIpAddress(client_addr);
             var id = msg.id;
@@ -350,7 +350,7 @@ sockets.init = function(server)
     // Functions
     function postAuthentication(socket, room)
     {
-        var client_addr = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
+        var client_addr = socket.handshake.headers["x-real-ip"] || socket.request.connection.remoteAddress;
 
         var address = utils.getIpAddress(client_addr);
 
