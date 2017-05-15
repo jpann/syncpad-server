@@ -200,7 +200,7 @@ router.get('/listClients',
 
                     var client_addr = client.handshake.headers["x-real-ip"] || client.request.connection.remoteAddress;
 
-                    var remoteAddress = utils.getIpAddress(client_addrr); 
+                    var remoteAddress = utils.getIpAddress(client_addr); 
 
                     clients.push(
                     {
