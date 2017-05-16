@@ -58,6 +58,7 @@
     <link rel="stylesheet" href="/css/quill.snow.css">
 
     <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <script src="/js/notify.js"></script>
 </head>
 
 <body>
@@ -81,7 +82,7 @@
                 <button class="ql-code-block" value="sub"></button>
             </div>
             <div id="editor"></div>
-            <br/><br/>
+
         </div>
 
         <div class="modal fade" id="settings-modal" tabindex="-1" role="dialog">
@@ -402,6 +403,11 @@
         $('#status-list').prepend($('<li class="list-group-item">').text(msg));
     }
 
+    function notify(msg)
+    {
+        $.notify(msg, "info");
+    }
+
     function connect(sid, roomId, password)
     {
         let key = ""; // store encryption key in memory
@@ -492,6 +498,7 @@
                 //console.log('room:join ' + JSON.stringify(data));
 
                 updateStatus(`User ${data.user} joined the room from '${data.address}'.`);
+                notify(`User ${data.user} joined the room from '${data.address}'.`);
             });
 
             socket.on('room:leave', function(data)
@@ -499,6 +506,7 @@
                 //console.log('room:leave ' + JSON.stringify(data));
 
                 updateStatus(`User ${data.user} left the room from '${data.address}'.`);
+                notify(`User ${data.user} left the room from '${data.address}'.`);
             });
 
             // Received request to get latest text body
@@ -525,7 +533,7 @@
                 var m_encrypted = data.encrypted;
                 var m_hostname = data.hostname;
 
-                console.log("socket - text: " + JSON.stringify(data));
+                //console.log("socket - text: " + JSON.stringify(data));
 
                 var d_text = decrypt(m_text, key);
                 var data = JSON.parse(d_text);
@@ -536,6 +544,8 @@
             socket.on('text:typing', function(data)
             {
                 console.log("socket - text:typing - " + data.hostname);
+
+               notify(`${data.user} is typing...`);
             });
 
             socket.once('text:refresh', function(data)
