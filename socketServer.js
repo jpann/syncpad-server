@@ -262,7 +262,7 @@ sockets.init = function(server)
                 {
                     socket.emit('unauthorized', 
                     { 
-                        'message' : "Unable to join room.",
+                        'message' : `Unable to join room. Invalid room password or password length is less than ${ROOM_PASSWORD_MIN_LENGTH}.`,
                         'roomId' : roomId
                     });
 
