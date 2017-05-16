@@ -91,20 +91,28 @@
                         <h4 class="modal-title">Editor Room Settings</h4>
                     </div>
                     <div class="modal-body">
-                        <h6>Room password:</h6>
+                        <h5>Enter the password for the room:</h5>
                         <p>
                             <input type="text" class="form-control room-password-setting" id="room-password-setting" />
                         </p>
-                        <button type="button" class="btn btn-default generate-key" id="generate-key">Generate Password</button>
+                        <button type="button" class="btn btn-default generate-key" id="generate-key" data-container="body" data-toggle="popover" title="Generate Password" data-content="You only need to generate a password if you are creating a new room and want to use a random password." data-placement="bottom">Generate Password</button>
                         <br/><br/>
 
-                        <h6>You can share this editor by providing the link below.
-                        <br/><br/>
-                        <b>Users joining this room will need to enter the password above.</b>
-                        </h6>
+                        <h4>Share Room:</h4>
                         <p>
+                            If you wish to share this room with another person, you can send them the url below.
+                            <br/><br/>
+                            When they go to the url below, they will be prompted to enter the room password, so you will need to let them know the password you specified above.
+                            <br/><br/>
                             <input type="text" class="form-control" id="share-url" readonly/>
                         </p>
+
+                        <br/>
+                        <div class="alert alert-danger alert-block" id="alert-error">
+                            <button type="button" class="close" aria-hidden="true">&times;</button>
+                            <p id="alert-error-txt">
+                            </p>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" id="cancel" data-dismiss="modal">Cancel</button>
@@ -216,8 +224,18 @@
 
     $(function()
     {
+        $('#alert-error').hide();
+        $('[data-toggle="popover"]').popover();
+
         $('#share-url').val(window.location.href);
         $('#settings-modal').modal('show');
+
+        $('#generate-key').popover().click(function () 
+        {
+            setTimeout(function () {
+                $('#generate-key').popover('hide');
+            }, 2000);
+        });
 
         $('#users-button').click(function()
         {
@@ -294,12 +312,10 @@
         {
             var password = $('#room-password-setting').val();
 
-            if (password)
+            if (password && password.length >= 6)
             {
                 //TODO Should we store this on the page or just in memory?
                 $('#password').val(password);
-
-                $('#settings-modal').modal('toggle');
 
                 var sid = $('#sid').val();
                 var roomId = $('#roomId').val();
@@ -308,7 +324,6 @@
 
                 if (sid && roomId && password)
                 {
-                    //TODO Connect
                     console.log("connecting...");
 
                     updateStatus(`Connecting to room ${roomId}...`);
@@ -319,35 +334,40 @@
                 }
                 else
                 {
-                    console.log("no sid, room id, or password")
+                    console.log("no sid, room id, or password");
                 }
             }
-        });
-
-        $('.alert .close').on('click', function(e) 
-        {
-            $(this).parent().hide();
-        });
-
-        function successAlert(msg)
-        {
-            $('#alert-success-txt').text(msg);
-            $('#alert-success').show();
-            $("#alert-success").fadeTo(2000, 500).slideUp(500, function()
+            else
             {
-                $("#alert-success").slideUp(500);
-            });
-        }
-        function errorAlert(msg)
-        {
-            $('#alert-error-txt').text(msg);
-            $('#alert-error').show();
-            $("#alert-error").fadeTo(2000, 500).slideUp(500, function()
-            {
-                $("#alert-error").slideUp(500);
-            });
-        }
+                errorAlert('Please provide a password that is more than 6 characters.');
+            }
+        });
     });
+
+    $('.alert .close').on('click', function(e) 
+    {
+        $(this).parent().hide();
+    });
+
+    function successAlert(msg)
+    {
+        $('#alert-success-txt').text(msg);
+        $('#alert-success').show();
+        $("#alert-success").fadeTo(2000, 500).slideUp(500, function()
+        {
+            $("#alert-success").slideUp(500);
+        });
+    }
+
+    function errorAlert(msg)
+    {
+        $('#alert-error-txt').text(msg);
+        $('#alert-error').show();
+        $("#alert-error").fadeTo(2000, 500).slideUp(500, function()
+        {
+            $("#alert-error").slideUp(500);
+        });
+    }
 
     function generateKey()
     {
@@ -379,7 +399,7 @@
     {
         msg = `[${moment().format("MM/DD/YYYY h:mm:ss a")}]: ${msg}`;
 
-        $('#status-list').prepend($('<li class="list-group-item">').text(msg));;
+        $('#status-list').prepend($('<li class="list-group-item">').text(msg));
     }
 
     function connect(sid, roomId, password)
@@ -403,15 +423,11 @@
 
         socket.on('connect', function()
         {
-            //console.log('socket:connect: ' + sid + '; roomId: ' + roomId);
+            updateStatus(`You connected to the server.`);
 
-            updateStatus(`You connected successfully to room ${roomId}!`);
-
-            //
-            // New
             socket.on('room:auth', function(data, ack)
             {
-                //console.log('room:auth ' + data.roomId);
+                console.log('room:auth ' + data.roomId);
 
                 // requested room passport
                 ack({ 'password' : password });
@@ -422,9 +438,11 @@
                 var roomKey = data.key;
                 key = roomKey;
 
-                //console.log('socket:authenticated - got key: ' + key);
+                console.log('socket:authenticated');
 
                 updateStatus(`You are now authenticated in room ${data.roomId}.`);
+
+                $('#settings-modal').modal('toggle');
             });
 
             socket.on('unauthorized', function(data) 
@@ -432,38 +450,41 @@
                 var msg = data.message;
                 var roomId = data.roomId;
 
-                //console.log('socket:unauthorized: ' + msg);
+                console.log('socket:unauthorized: ' + msg);
 
                 updateStatus(`You are not authorized in room ${data.roomId}: ${msg}`);
+                errorAlert(`You are not authorized in room ${data.roomId}: ${msg}`);
             });
 
             socket.on('connect_error', function(err)
             {
-                //console.log('socket:error:connection: ' + JSON.stringify(err));
+                console.log('socket:error:connection: ' + JSON.stringify(err));
 
                 updateStatus(`connect_error: ${err.error}`);
+                errorAlert(`connect_error: ${err.error}`);
             });
 
             socket.on('connect_timeout', function(err)
             {
-                //console.log('socket:error:timeout: ' + err.error);
+                console.log('socket:error:timeout: ' + err.error);
 
                 updateStatus(`connect_timeout: ${err.error}`);
+                errorAlert(`connect_timeout: ${err.error}`);
             });
 
             socket.on('error', function(err)
             {
-                //console.log('socket:error: ' + JSON.stringify(err));
+                console.log('socket:error: ' + JSON.stringify(err));
 
                 //TODO Redirect on error?
                 updateStatus(`Error: ${err.error}`);
+                errorAlert(`Error: ${err.error}`);
             });
 
             socket.on('disconnect', function(err)
             {
-                //console.log('Socket - Disconnected: ' + JSON.stringify(err));
-
-                updateStatus(`disconnect: ${err.error}`);
+                updateStatus(`Disconnected from server.`);
+                //errorAlert(`Disconnected from server.`);
             });
 
             socket.on('room:join', function(data)
