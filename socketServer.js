@@ -78,7 +78,7 @@ sockets.init = function(server)
         }
         else
         {
-            if (password < ROOM_PASSWORD_MIN_LENGTH)
+            if (password.length < ROOM_PASSWORD_MIN_LENGTH)
                 return null;
 
             // Create new room
