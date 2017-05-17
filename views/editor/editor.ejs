@@ -228,6 +228,18 @@
         $('#alert-error').hide();
         $('[data-toggle="popover"]').popover();
 
+        $.notify.addStyle('grey', 
+        {
+            html: "<div><span data-notify-text/></div>",
+            classes: {
+                base: {
+                "white-space": "nowrap",
+                "background-color": "#E9E9E9",
+                "padding": "5px"
+                }
+            }
+        });
+
         $('#share-url').val(window.location.href);
         $('#settings-modal').modal('show');
 
@@ -268,8 +280,8 @@
                         $('#user-table tbody').append(`
                         <tr>
                             <td>${client.username}</td>
-                            <td>${moment(client.connectedTime, "YYYY MM DD, h:mm:ss a").fromNow()}</td>
-                            <td>${moment(client.lastUpdateTime, "YYYY MM DD, h:mm:ss a").fromNow()}</td>
+                            <td>${moment(client.connectedTime, "YYYY MM DD, h:mm:ss a").local().fromNow()}</td>
+                            <td>${moment(client.lastUpdateTime, "YYYY MM DD, h:mm:ss a").local().fromNow()}</td>
                             <td>${client.remoteAddress}</td>
                         </tr>
                         `);
@@ -398,14 +410,17 @@
 
     function updateStatus(msg)
     {
-        msg = `[${moment().format("MM/DD/YYYY h:mm:ss a")}]: ${msg}`;
+        msg = `[${moment().local().format("MM/DD/YYYY h:mm:ss a")}]: ${msg}`;
 
         $('#status-list').prepend($('<li class="list-group-item">').text(msg));
     }
 
     function notify(msg)
     {
-        $.notify(msg, "info");
+        $.notify(msg, 
+        {
+            style: 'grey'
+        });
     }
 
     function connect(sid, roomId, password)
