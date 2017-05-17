@@ -558,9 +558,7 @@
 
             socket.on('text:typing', function(data)
             {
-                console.log("socket - text:typing - " + data.hostname);
-
-               notify(`${data.user} is typing...`);
+                //console.log("socket - text:typing - " + data.hostname);
             });
 
             socket.once('text:refresh', function(data)
