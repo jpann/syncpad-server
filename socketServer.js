@@ -317,7 +317,7 @@ sockets.init = function(server)
         {
             var user = socket.request.user.username;
             var client_addr = socket.handshake.headers["x-real-ip"] || socket.request.connection.remoteAddress;
-            var address = utils.getIpAddress(client_address);
+            var address = utils.getIpAddress(client_addr);
 
             var typing = msg.is_typing;
             var hostname = msg.hostname;
