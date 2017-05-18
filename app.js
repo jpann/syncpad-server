@@ -63,6 +63,14 @@ app.use(session(
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use(function (req, res, next) 
+{
+   res.locals.version = process.env.npm_package_version || require('./package.json').version;
+   res.locals.ip = req.headers['x-forwarded-for'] || req._remoteAddress;
+
+   next();
+});
+
 //
 // Config Passport 
 passport.use(new Strategy(
