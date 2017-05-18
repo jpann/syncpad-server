@@ -1,7 +1,5 @@
 <nav class="navbar navbar-inverse navbar-fixed-bottom">
   <div class="container-fluid">
-    <% if (user) { %>
-        <p class="navbar-text navbar-right">Signed in as <%= user.username %></p>
-    <% } %>
+        <p class="navbar-text navbar-left">You are logged in from '<%= ip %>'</p>
   </div>
 </nav>
