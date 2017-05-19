@@ -59,32 +59,6 @@ router.get('/',
         }
     });
 
-/*
-router.post('/',
-    require('connect-ensure-login').ensureLoggedIn(),
-    function(req, res, next)
-    {
-        try
-        {
-            var key = req.body.encryption_key;
-            if (!key)
-                res.redirect('/editor');
-
-            // 1. Create random room Id
-            const room = createRoom(req);
-
-            editorRooms.push(room);
-            req.session['key'] = key;
-
-            res.redirect(`/editor/${room.roomId}`);
-        }
-        catch (err)
-        {
-            next(err);
-        }
-    });
-*/
-
 router.get('/:roomId',
     require('connect-ensure-login').ensureLoggedIn(),
     function(req, res, next)
