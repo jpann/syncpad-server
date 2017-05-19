@@ -83,12 +83,12 @@ passport.use(new Strategy(
         {
             if (err) 
             { 
-                return cb(err, false, { "message" : err.message }); 
+                return cb(err); 
             }
 
             if (!user) 
             { 
-                return cb(null, false); 
+                return cb(null, false, { "message" : "Invalid user or password." }); 
             }
 
             if (user)
