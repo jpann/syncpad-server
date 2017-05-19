@@ -20,7 +20,7 @@ router.get('/login',
     {
         var referrer = req.header('Referer');
 
-        var e = req.flash('loginMessage')
+        var e = req.flash('error')
         res.render('login', { errors :  e});
     });
 
