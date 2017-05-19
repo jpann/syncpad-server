@@ -176,7 +176,7 @@ exports.validateUser = function (username, password, callback)
 {
     username = username.toLowerCase();
 
-    db.get('SELECT id, username, password, isadmin, max_clients, user_id, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role  FROM users WHERE username = ?', username)
+    db.get('SELECT id, username, password, isadmin, max_clients, user_id, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role  FROM users WHERE username = ? AND locked <> 1', username)
         .then(function(row)
         {
             if (row == null || row == undefined || row == [])
