@@ -34,20 +34,35 @@ router.post('/profile/update',
 
         try
         {
-            if (password.length < MIN_PASSWORD_LENGTH)
-                throw new Error("Password is too short.");
+            req.checkBody('password', 'Password is too short.').notEmpty().isMinLength(MIN_PASSWORD_LENGTH);
 
-            database.updatePassword(user_id, password, function(err, id)
+            var errors = req.validationErrors();
+
+            if (errors)
             {
-                if (!err)
+                var msg = "";
+
+                errors.forEach(function(element) {
+                    msg += element.msg;
+                });
+
+                res.json({ "status": "error", "message": msg });
+            }
+            else
+            {
+                database.updatePassword(user_id, password, function(err, id)
                 {
-                    res.json({ "status": "success", "id": id });
-                }
-                else
-                {
-                    res.status(500).json({ "status": "error", "message": err.message });
-                }
-            });
+                    if (!err)
+                    {
+                        res.json({ "status": "success", "id": id });
+                    }
+                    else
+                    {
+                        res.json({ "status": "error", "message": err.message });
+                    }
+                });
+            }
+            
         }
         catch (err)
         {
@@ -90,21 +105,36 @@ router.post('/addUser',
 
         try
         {
-            if (password.length < MIN_PASSWORD_LENGTH)
-                res.status(500).json({ "status": "error", "message": "Password is too short."});
+            req.checkBody('password', 'Password is too short.').notEmpty().isMinLength(MIN_PASSWORD_LENGTH);
+            req.checkBody('username', 'Invalid username.').notEmpty();
 
-            database.addUser(username, password, false, function(err, user)
+            var errors = req.validationErrors();
+
+            if (errors)
             {
-                if (!err)
+                var msg = "";
+
+                errors.forEach(function(element) {
+                    msg += element.msg;
+                });
+
+                res.json({ "status": "error", "message": msg });
+            }
+            else
+            {
+                database.addUser(username, password, false, function(err, user)
                 {
-                    res.json({ "status": "success", "user": user });
-                }
-                else
-                {
-                    res.contentType('json');
-                    res.status(500).json({ "status": "error", "message": err.message });
-                }
-            });
+                    if (!err)
+                    {
+                        res.json({ "status": "success", "user": user });
+                    }
+                    else
+                    {
+                        res.json({ "status": "error", "message": err.message });
+                    }
+                });
+            }
+            
         }
         catch (err)
         {
@@ -123,17 +153,34 @@ router.post('/delUser',
 
         try
         {
-            database.delUser(user_id, function(err, id)
+            req.checkBody('id', 'Invalid ID.').notEmpty();
+
+            var errors = req.validationErrors();
+
+            if (errors)
             {
-                if (err)
+                var msg = "";
+
+                errors.forEach(function(element) {
+                    msg += element.msg;
+                });
+
+                res.json({ "status": "error", "message": msg });
+            }
+            else
+            {
+                database.delUser(user_id, function(err, id)
                 {
-                    res.status(500).json({ "status": "error", "message": err.message });
-                }
-                else
-                {
-                    res.json({ "result": id });
-                }
-            });
+                    if (err)
+                    {
+                        res.json({ "status": "error", "message": err.message });
+                    }
+                    else
+                    {
+                        res.json({ "status" : "success" , "result" : id });
+                    }
+                });
+            }
         }
         catch (err)
         {
@@ -152,20 +199,35 @@ router.post('/updateUser',
 
         try
         {
-            if (password.length < MIN_PASSWORD_LENGTH)
-                throw new Error("Password is too short.");
+            req.checkBody('password', 'Password is too short.').notEmpty().isMinLength(MIN_PASSWORD_LENGTH);
+            req.checkBody('id', 'Invalid ID.').notEmpty();
 
-            database.updatePassword(user_id, password, function(err, id)
+            var errors = req.validationErrors();
+
+            if (errors)
             {
-                if (!err)
+                var msg = "";
+
+                errors.forEach(function(element) {
+                    msg += element.msg;
+                });
+
+                res.json({ "status": "error", "message": msg });
+            }
+            else
+            {
+                database.updatePassword(user_id, password, function(err, id)
                 {
-                    res.json({ "status": "success", "id": id });
-                }
-                else
-                {
-                    res.status(500).json({ "status": "error", "message": err.message });
-                }
-            });
+                    if (!err)
+                    {
+                        res.json({ "status": "success", "id": id });
+                    }
+                    else
+                    {
+                        res.json({ "status": "error", "message": err.message });
+                    }
+                });
+            }
         }
         catch (err)
         {
@@ -240,26 +302,39 @@ router.post('/updateUserProfile',
 
         try
         {
-            if (!max_clients || max_clients <= 1)
-                throw new Error("Invalid max clients.");
-
-            if (!role || (role.toLowerCase() != 'admin' && role.toLowerCase() != 'user'))
-                role = 'user';
-
             if (!locked)
                 locked = false;
 
-            database.updateUser(user_id, max_clients, role, locked, function(err, id)
+            req.checkBody('id', 'Invalid ID.').notEmpty();
+            req.checkBody('max_clients', 'Invalid max clients.').notEmpty().isInt().gte(2);
+            req.checkBody('role', 'Invalid role.').notEmpty().isValidRole();
+
+            var errors = req.validationErrors();
+
+            if (errors)
             {
-                if (!err)
+                var msg = "";
+
+                errors.forEach(function(element) {
+                    msg += element.msg;
+                });
+
+                res.json({ "status": "error", "message": msg });
+            }
+            else
+            {
+                database.updateUser(user_id, max_clients, role, locked, function(err, id)
                 {
-                    res.json({ "status": "success", "id": id });
-                }
-                else
-                {
-                    res.status(500).json({ "status": "error", "message": err.message });
-                }
-            });
+                    if (!err)
+                    {
+                        res.json({ "status": "success", "id": id });
+                    }
+                    else
+                    {
+                        res.json({ "status": "error", "message": err.message });
+                    }
+                });
+            }
         }
         catch (err)
         {
