@@ -92,11 +92,27 @@
                         <h4 class="modal-title">Editor Room Settings</h4>
                     </div>
                     <div class="modal-body">
-                        <h5>Enter the password for the room:</h5>
+                        <p>
+                        <% if (roomExists) { %>
+                        This room already exists, so in the field below you will need to enter the previously set password to join the room.
+                        <% } else { %>
+                        You are creating a new room. In order to create a new room you will need to specify a password for the room. You will need to remember this password in order to join it from another editor or to share the room with others.
+                        <% } %>
+                        </p>
+                        <br/>
+                        
+                        <% if (roomExists) { %>
+                        <h5>Enter the password to join the room:</h5>
+                        <% } else { %>
+                        <h5>Enter a new password for this room:</h5>
+                        <% } %>
                         <p>
                             <input type="text" class="form-control room-password-setting" id="room-password-setting" />
                         </p>
-                        <button type="button" class="btn btn-default generate-key" id="generate-key" data-container="body" data-toggle="popover" title="Generate Password" data-content="You only need to generate a password if you are creating a new room and want to use a random password." data-placement="bottom">Generate Password</button>
+
+                        <% if (!roomExists) { %>
+                        <button type="button" class="btn btn-default generate-key" id="generate-key">Generate Password</button>
+                        <% } %>
                         <br/><br/>
 
                         <h4>Share Room:</h4>
@@ -226,7 +242,6 @@
     $(function()
     {
         $('#alert-error').hide();
-        $('[data-toggle="popover"]').popover();
 
         $.notify.addStyle('grey', 
         {
