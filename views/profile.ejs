@@ -67,6 +67,7 @@
                             <td class="col-md-1"><small>Role</small></td>
                             <td class="col-md-11"><small><%= user.role %></small></td>
                         </tr>
+                        <% if (user.role != 'guest') { %>
                         <tr>
                             <td class="col-md-1"><small>Password</small></td>
                             <td class="col-md-11">
@@ -96,6 +97,7 @@
                                 </div>
                             </td>
                         </tr>
+                        <% } %>
                     </tbody>
                     </table>
                 </div>

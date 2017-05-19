@@ -57,7 +57,7 @@ app.use(expressValidator(
             },
             isValidRole : function(param)
             {
-                if (param.toLowerCase() == 'admin' || param.toLowerCase() == 'user')
+                if (param.toLowerCase() == 'admin' || param.toLowerCase() == 'user' || param.toLowerCase() == 'guest')
                     return true;
                 else
                     return false;
