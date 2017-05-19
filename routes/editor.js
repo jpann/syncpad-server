@@ -72,11 +72,14 @@ router.get('/:roomId',
 
             var io = req.app.get('socketio');
 
+            var roomExists = checkIfRoomExists(roomId, io);
+
             res.render('editor/editor',
                 {
                     'user': req.user,
                     'roomId': roomId,
-                    'sid': req.sessionID
+                    'sid': req.sessionID,
+                    'roomExists' : roomExists
                 });
         }
         catch (err)
