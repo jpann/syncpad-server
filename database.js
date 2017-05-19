@@ -30,13 +30,16 @@ function generateGuid()
     return id.value;
 }
 
-exports.addUser = function(username, password, isadmin, callback)
+exports.addUser = function(username, password, role, callback)
 {
     if (username === undefined)
         callback(new Error("Username is not valid."), null);
 
     if (password === undefined)
         callback(new Error("Password is not valid."), null);
+
+    if (role === undefined)
+        role = 'user';
 
     var hashed_password = passwordHash.generate(password);
 
@@ -54,7 +57,7 @@ exports.addUser = function(username, password, isadmin, callback)
             {
                 var guid = generateGuid();
 
-                db.get("INSERT INTO users (username, password, isadmin, user_id) VALUES(?, ?, ?, ?)", username, hashed_password, isadmin, guid)
+                db.get("INSERT INTO users (username, password, role, user_id) VALUES(?, ?, ?, ?)", username, hashed_password, role, guid)
                     .then(function(err, data)
                     {
                         if (err)
@@ -80,7 +83,7 @@ exports.delUser = function(id, callback)
         callback(new Error("Invalid ID"), null);
 
     // Check if we're deleting the last admin
-    db.get('SELECT COUNT(*) cnt FROM users WHERE isadmin = 1 and user_id <> ?', id)
+    db.get("SELECT COUNT(*) cnt FROM users WHERE role <> 'admin' and user_id <> ?", id)
         .then(function(row)
         {
             if (row.cnt < 1)
@@ -142,7 +145,7 @@ exports.updateUser = function (id, max_clients, role, locked, callback)
     else
         locked = false;
 
-    db.run("UPDATE users SET max_clients = ?, isadmin = ?, locked = ? WHERE user_id = ?", max_clients, role == 'admin' ? 1 : 0, locked, id)
+    db.run("UPDATE users SET max_clients = ?, role = ?, locked = ? WHERE user_id = ?", max_clients, role, locked, id)
         .then(function()
         {
             callback(null, id);
@@ -176,7 +179,7 @@ exports.validateUser = function (username, password, callback)
 {
     username = username.toLowerCase();
 
-    db.get('SELECT id, username, password, isadmin, max_clients, user_id, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role  FROM users WHERE username = ? AND locked <> 1', username)
+    db.get('SELECT id, username, password, role, max_clients, user_id, locked, addingdatetime FROM users WHERE username = ? AND locked <> 1', username)
         .then(function(row)
         {
             if (row == null || row == undefined || row == [])
@@ -220,11 +223,9 @@ exports.validateAdmin = function (username, password, callback)
 {
     username = username.toLowerCase();
 
-    db.get('SELECT id, username, password, isadmin, max_clients, user_id, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role  FROM users WHERE username = ? AND IsAdmin = 1', username)
+    db.get("SELECT id, username, password, role, max_clients, user_id, locked, addingdatetime FROM users WHERE username = ? AND role = 'admin'", username)
         .then(function(row)
         {
-            console.log("database: validate admin: " + row);
-
             if (row == null || row == undefined || row == [])
             {
                 callback(null, null);
@@ -264,7 +265,7 @@ exports.validateAdmin = function (username, password, callback)
 
 exports.getUserById = function (id, callback)
 {
-    db.get('SELECT id, username, max_clients, user_id, password, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role, lastconnecteddatetime  FROM users WHERE user_id = ?', id)
+    db.get('SELECT id, username, max_clients, user_id, password, locked, addingdatetime, role, lastconnecteddatetime  FROM users WHERE user_id = ?', id)
         .then(function(row)
         {
             if (row == null || row == undefined || row == [])
@@ -297,7 +298,7 @@ exports.getUserById = function (id, callback)
 
 exports.getUsers = function (callback)
 {
-    db.all('SELECT id, username, isadmin, max_clients, user_id, locked, addingdatetime, CASE WHEN isadmin = 1 THEN \'admin\' ELSE \'user\' END role, lastconnecteddatetime FROM users')
+    db.all('SELECT id, username, role, max_clients, user_id, locked, addingdatetime, lastconnecteddatetime FROM users')
         .then(function(rows)
         {
             if (rows == null || rows == undefined || rows == [])
