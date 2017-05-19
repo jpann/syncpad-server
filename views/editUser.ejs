@@ -203,15 +203,21 @@
                                 {
                                     console.log(data);
 
-                                    successAlert("Success!");
+                                    if (data.status == "success")
+                                    {
+                                        successAlert("Success!");       
+                                    }
+                                    else
+                                    {
+                                        errorAlert(data.message);
+                                    }
                                 },
                                 error: function(jqXHR, textStatus, err)
                                 {
                                     console.warn(jqXHR.responseJSON.message)
                                     console.warn('text status ' + textStatus + ', err ' + err)
 
-
-                                    errorAlert(jqXHR.responseJSON.message);
+                                    errorAlert(textStatus);
                                 },
                             });
                     });
@@ -251,7 +257,14 @@
                                 {
                                     console.log(data);
 
-                                    successAlert("Success!");
+                                    if (data.status == "success")
+                                    {
+                                        successAlert("Success!");
+                                    }
+                                    else
+                                    {
+                                        errorAlert(data.message);
+                                    }
                                 },
                                 error: function(jqXHR, textStatus, err)
                                 {
@@ -259,7 +272,7 @@
                                     console.warn('text status ' + textStatus + ', err ' + err)
 
 
-                                    errorAlert(jqXHR.responseJSON.message);
+                                    errorAlert(textStatus);
                                 },
                             });
                     });

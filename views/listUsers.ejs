@@ -153,9 +153,16 @@ $(function ()
             {
                 console.log(data)
 
-                successAlert("Added user!");
+                if (data.status == "success")
+                {
+                    successAlert("Added user!");
 
-                loadUsers();
+                    loadUsers();
+                }
+                else
+                {
+                    errorAlert(data.message);
+                }
             },
 
             error: function(jqXHR, textStatus, err)
@@ -163,7 +170,7 @@ $(function ()
                 console.warn(jqXHR.responseJSON)
                 console.warn('text status '+textStatus+', err '+err)
 
-                errorAlert(jqXHR.responseJSON.message);
+                errorAlert(textStatus);
             },
         });
     });
@@ -269,16 +276,24 @@ $(function ()
             },
             success: function(data) 
             {
-                successAlert("Deleted user!");
+                if (data.status == "success")
+                {
+                    console.log(data);
+                    successAlert("Deleted user!");
 
-                loadUsers();
+                    loadUsers();
+                }
+                else
+                {
+                    errorAlert(data.message);
+                }
             },
             error: function(jqXHR, textStatus, err)
             {
                 console.warn(jqXHR.responseJSON)
                 console.warn('text status '+textStatus+', err '+err)
 
-                errorAlert(jqXHR.responseJSON.message);
+                errorAlert(textStatus);
             },
         });
     }

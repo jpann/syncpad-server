@@ -10,6 +10,7 @@ var moment = require('moment');
 var flash = require('connect-flash');
 var fs = require('fs');
 var rfs = require('rotating-file-stream');
+var expressValidator = require('express-validator');
 
 var database = require('./database');
 
@@ -46,6 +47,28 @@ app.use(logger('combined', { stream: accessLogStream }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(expressValidator(
+    {
+        customValidators : 
+        {
+            isMinLength : function(param, length)
+            {
+                return param.length >= length;
+            },
+            isValidRole : function(param)
+            {
+                if (param.toLowerCase() == 'admin' || param.toLowerCase() == 'user')
+                    return true;
+                else
+                    return false;
+            },
+            gte : function(param, value)
+            {
+                return param >= value;
+            }
+        }
+    }
+));
 app.use(express.static(path.join(__dirname, 'public')));
 
 //

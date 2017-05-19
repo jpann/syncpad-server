@@ -124,7 +124,7 @@ $(function ()
         $('#alert-error-txt').text(msg);
         $('#alert-error').show();
 
-        $("#alert-error").fadeTo(2000, 500).slideUp(500, function()
+        $("#alert-error").fadeTo(5000, 500).slideUp(500, function()
         {
             $("#alert-error").slideUp(500);
         });
@@ -163,17 +163,22 @@ $(function ()
             },
             success: function(data) 
             {
-                console.log(data);
-
-                successAlert("Success!");
+                if (data.status == "success")
+                {
+                    successAlert("Success!");
+                }
+                else
+                {
+                    errorAlert(data.message);
+                }                
             },
             error: function(jqXHR, textStatus, err)
             {
-                console.warn(jqXHR.responseJSON.message)
+                console.warn(JSON.stringify(jqXHR.responseJSON))
                 console.warn('text status '+textStatus+', err '+err)
 
-
-                errorAlert(jqXHR.responseJSON.message);
+                errorAlert(textStatus);
+                
             },
         });
     });
