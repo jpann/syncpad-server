@@ -5,6 +5,7 @@ var passportSocketIo = require("passport.socketio");
 var cookieParser = require('cookie-parser');
 var async = require('async');
 
+var moment = require('moment');
 var _ = require('underscore');
 var shortid = require('shortid');
 var CryptoJS = require("crypto-js");
@@ -343,6 +344,47 @@ sockets.init = function(server)
             var text = msg.text;
 
             socket.broadcast.to(id).emit('text:refresh', { "text": text, "hostname": address });
+        });
+
+        // Get list of users in room by RoomId
+        socket.on('users:list', function(msg, ack)
+        {
+            var roomId = socket.roomId;
+
+            if (!roomId)
+                ack(null);
+
+            var sockets = Object.keys(io.sockets.adapter.rooms[roomId].sockets);
+
+            var clients = [];
+
+            for (var i = 0; i < sockets.length; i++)
+            {
+                var socketId = sockets[i];
+                var client_socket = io.sockets.connected[socketId];
+
+                if (client_socket)
+                {
+                    var connectedTime = moment(client_socket.client.connectedTime);
+                    var lastUpdateTime = moment(client_socket.client.lastUpdateTime);
+
+                    var client_addr = client_socket.handshake.headers["x-real-ip"] || client_socket.request.connection.remoteAddress;
+
+                    var remoteAddress = utils.getIpAddress(client_addr); 
+
+                    clients.push(
+                    {
+                        "roomId" : client_socket.roomId,
+                        "username" : client_socket.client.user.username,
+                        "remoteAddress" : remoteAddress,
+                        "user_id" : client_socket.client.user.user_id,
+                        "connectedTime" : connectedTime.format('YYYY MM DD, h:mm:ss a'),
+                        "lastUpdateTime" : lastUpdateTime.format('YYYY MM DD, h:mm:ss a'),
+                    });
+                }
+            }
+
+            ack(clients);
         });
     });
 
