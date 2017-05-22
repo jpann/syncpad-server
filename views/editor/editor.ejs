@@ -248,10 +248,19 @@
             classes: {
                 base: {
                 "white-space": "nowrap",
-                "background-color": "#E9E9E9",
-                "padding": "5px"
+                "background-color": "#B6E2FE",
+                "padding": "5px",
+                "color" : "#000000",
+                "border-color" : "#000000",
+                "border-radius": "4px"
                 }
-            }
+            },
+        });
+
+        $.notify.defaults(
+        {
+            globalPosition: 'bottom right',
+            autoHideDelay: 2000,
         });
 
         $('#share-url').val(window.location.href);
