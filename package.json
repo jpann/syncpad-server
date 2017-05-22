@@ -1,7 +1,7 @@
 {
   "name": "syncpad-server",
   "description": "Node.js server for syncpad-client.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "scripts": {
     "start": "set DEBUG=syncpad-server:* & node ./bin/www"
