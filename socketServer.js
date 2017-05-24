@@ -267,6 +267,8 @@ sockets.init = function(server)
                         'roomId' : roomId
                     });
 
+                    socket.roomId = undefined;
+
                     socket.disconnect(true);
                 }
             });
@@ -279,19 +281,22 @@ sockets.init = function(server)
             var address = utils.getIpAddress(client_addr);
             console.log(`Disconnected: '${socket.request.user.username}' [${address}].`);
 
-            // Remove from connectedClients
-            removeConnectedClient(socket);
-            removeClientFromRoom(socket.roomId, socket.id);
+            if (socket.roomId != undefined)
+            {
+                // Remove from connectedClients
+                removeConnectedClient(socket);
+                removeClientFromRoom(socket.roomId, socket.id);
 
-            // Update last connection date time
-            //updateLastConnectionDateTime(socket.request.user.user_id, moment(new Date()).format());
+                // Update last connection date time
+                //updateLastConnectionDateTime(socket.request.user.user_id, moment(new Date()).format());
 
-            socket.broadcast.to(socket.roomId).emit('room:leave', 
-            { 
-                "room": socket.roomId, 
-                "user": socket.request.user.username,
-                "address" : address
-            });
+                socket.broadcast.to(socket.roomId).emit('room:leave', 
+                { 
+                    "room": socket.roomId, 
+                    "user": socket.request.user.username,
+                    "address" : address
+                });
+            }
         });
 
         // Client text update
