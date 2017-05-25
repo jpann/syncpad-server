@@ -223,7 +223,7 @@ $(function ()
                     <td><a href="/profile/${user.user_id}">${user.username}</a></td>
                     <td>${user.max_clients}</td>
                     <td>${user.locked}</td>
-                    <td>${user.lastconnecteddatetime ? moment(user.lastconnecteddatetime, "YYYY MM DD, h:mm:ss a").local().fromNow() : ''}</td>
+                    <td>${user.lastconnecteddatetime ? moment(user.lastconnecteddatetime).local().fromNow() : ''}</td>
                     <td>${moment(user.addingdatetime).local().format('MMMM Do YYYY, h:mm:ss a')}</td>
                 </tr>
                 `);
@@ -236,7 +236,7 @@ $(function ()
                     <td><a href="/profile/${user.user_id}">${user.username}</a></td>
                     <td>${user.max_clients}</td>
                     <td>${user.locked}</td>
-                    <td>${user.lastconnecteddatetime ? moment(user.lastconnecteddatetime, "YYYY MM DD, h:mm:ss a").local().fromNow() : ''}</td>
+                    <td>${user.lastconnecteddatetime ? moment(user.lastconnecteddatetime).local().fromNow() : ''}</td>
                     <td>${moment(user.addingdatetime).local().format('MMMM Do YYYY, h:mm:ss a')}</td>
                 </tr>
                 `);

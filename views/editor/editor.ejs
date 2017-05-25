@@ -299,12 +299,15 @@
                     $.each(data, function(id)
                     {
                         var client = data[id];
+                        
+                        console.log("-> " + moment(client.connectedTime).local().format("YYYY MM DD, h:mm:ss a"));
+
 
                         $('#user-table tbody').append(`
                         <tr>
                             <td>${client.username}</td>
-                            <td>${moment(client.connectedTime, "YYYY MM DD, h:mm:ss a").local().fromNow()}</td>
-                            <td>${moment(client.lastUpdateTime, "YYYY MM DD, h:mm:ss a").local().fromNow()}</td>
+                            <td>${moment(client.connectedTime).local().fromNow()}</td>
+                            <td>${moment(client.lastUpdateTime).local().fromNow()}</td>
                             <td>${client.remoteAddress}</td>
                         </tr>
                         `);
