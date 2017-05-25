@@ -257,8 +257,8 @@ router.get('/listClients',
 
                 if (client)
                 {
-                    var connectedTime = moment(client.client.connectedTime);
-                    var lastUpdateTime = moment(client.client.lastUpdateTime);
+                    var connectedTime = client.client.connectedTime;
+                    var lastUpdateTime = client.client.lastUpdateTime;
 
                     var client_addr = client.handshake.headers["x-real-ip"] || client.request.connection.remoteAddress;
 
@@ -273,8 +273,8 @@ router.get('/listClients',
                         "remoteAddress" : remoteAddress,
                         "user_id" : client.client.user.user_id,
                         "namespace" : client.nsp.name,
-                        "connectedTime" : connectedTime.format('YYYY MM DD, h:mm:ss a'),
-                        "lastUpdateTime" : lastUpdateTime.format('YYYY MM DD, h:mm:ss a'),
+                        "connectedTime" : connectedTime,
+                        "lastUpdateTime" : lastUpdateTime,
                     });
                 }
             }
@@ -386,8 +386,8 @@ router.get('/users/:roomId',
 
                 if (socket)
                 {
-                    var connectedTime = moment(socket.client.connectedTime);
-                    var lastUpdateTime = moment(socket.client.lastUpdateTime);
+                    var connectedTime = socket.client.connectedTime;
+                    var lastUpdateTime = socket.client.lastUpdateTime;
 
                     var client_addr = socket.handshake.headers["x-real-ip"] || socket.request.connection.remoteAddress;
 
@@ -399,8 +399,8 @@ router.get('/users/:roomId',
                         "username" : socket.client.user.username,
                         "remoteAddress" : remoteAddress,
                         "user_id" : socket.client.user.user_id,
-                        "connectedTime" : connectedTime.format('YYYY MM DD, h:mm:ss a'),
-                        "lastUpdateTime" : lastUpdateTime.format('YYYY MM DD, h:mm:ss a'),
+                        "connectedTime" : connectedTime,
+                        "lastUpdateTime" : lastUpdateTime,
                     });
                 }
             }

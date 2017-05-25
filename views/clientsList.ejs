@@ -145,13 +145,15 @@ $(function ()
         {
             var client = clients[id];
 
+            console.log("-> " + moment(client.connectedTime).local().format("YYYY MM DD, h:mm:ss a"));
+
             $('#user-table tbody').append(`
             <tr>
                 <td><a href="/profile/${client.user_id}">${client.username}</a></td>
                 <td><a href="/editor/${client.roomId}" target="_blank">${client.roomId}</a></td>
                 <td>${client.namespace}</td>
-                <td>${moment(client.connectedTime, "YYYY MM DD, h:mm:ss a").local().fromNow()}</td>
-                <td>${moment(client.lastUpdateTime, "YYYY MM DD, h:mm:ss a").local().fromNow()}</td>
+                <td>${moment(client.connectedTime).local().fromNow()}</td>
+                <td>${moment(client.lastUpdateTime).local().fromNow()}</td>
                 <td>${client.remoteAddress}</td>
             </tr>
             `);

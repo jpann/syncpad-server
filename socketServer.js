@@ -370,8 +370,8 @@ sockets.init = function(server)
 
                 if (client_socket)
                 {
-                    var connectedTime = moment(client_socket.client.connectedTime);
-                    var lastUpdateTime = moment(client_socket.client.lastUpdateTime);
+                    var connectedTime = client_socket.client.connectedTime;
+                    var lastUpdateTime = client_socket.client.lastUpdateTime;
 
                     var client_addr = client_socket.handshake.headers["x-real-ip"] || client_socket.request.connection.remoteAddress;
 
@@ -383,8 +383,8 @@ sockets.init = function(server)
                         "username" : client_socket.client.user.username,
                         "remoteAddress" : remoteAddress,
                         "user_id" : client_socket.client.user.user_id,
-                        "connectedTime" : connectedTime.format('YYYY MM DD, h:mm:ss a'),
-                        "lastUpdateTime" : lastUpdateTime.format('YYYY MM DD, h:mm:ss a'),
+                        "connectedTime" : connectedTime,
+                        "lastUpdateTime" : lastUpdateTime,
                     });
                 }
             }
@@ -405,8 +405,9 @@ sockets.init = function(server)
         var roomId = socket.roomId;
 
         socket.client.user = user;
-        socket.client.connectedTime = moment(new Date()).format();
-        socket.client.lastUpdateTime = moment(new Date()).format();
+
+        socket.client.connectedTime = moment.utc().format();
+        socket.client.lastUpdateTime = moment.utc().format();
 
         console.log(`Authenticated: ${socket.request.user.username} [${address}]; room '${socket.roomId}'.`);
 
@@ -425,7 +426,7 @@ sockets.init = function(server)
         addConnectedClient(socket);
 
         // Update last connection date time
-        updateLastConnectionDateTime(socket.request.user.user_id, moment(new Date()).format());
+        updateLastConnectionDateTime(socket.request.user.user_id, moment.utc().format());
 
         socket.broadcast.to(socket.roomId).emit('room:join', 
         { 
