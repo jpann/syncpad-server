@@ -55,6 +55,7 @@
         crossorigin="anonymous"></script>
     <script src="/js/quill.js"></script>
     <script src="/js/moment.js"></script>
+    <script src="/js/bundle.js"></script>
     <link rel="stylesheet" href="/css/quill.snow.css">
 
     <link rel="stylesheet" href="/css/bootstrap.min.css">
@@ -452,6 +453,7 @@
     function connect(sid, roomId, password)
     {
         let key = ""; // store encryption key in memory
+        let clientKey = null; // store DH key
 
         console.log(`Connect - Sid: ${sid}; RoomID: ${roomId}; password: ${password}`);
 
@@ -468,13 +470,30 @@
                 query: 'session_id=' + sid + '&roomId=' + roomId
             });
 
+        let secret_key = null;
         socket.on('connect', function()
         {
             updateStatus(`You connected to the server.`);
 
+            socket.on('auth:exchange', function(data, ack)
+            {
+                var server_publickey = data.key;
+
+                // Generate keys for Elliptic Curve Diffie-Hellman key exchange
+                clientKey = bCrypto.createECDH('secp521r1');
+                clientKey.generateKeys('hex');
+                var client_publickey = clientKey.getPublicKey('hex');
+
+                secret_key = clientKey.computeSecret(server_publickey, 'hex', 'hex');
+                ack(
+                {
+                    'key' : client_publickey
+                });
+            });
+
             socket.on('room:auth', function(data, ack)
             {
-                console.log('room:auth ' + data.roomId);
+                console.log(`room:auth: roomID=${data.roomId}`);
 
                 // requested room passport
                 ack({ 'password' : password });
@@ -482,8 +501,19 @@
 
             socket.on('authenticated', function(data) 
             {
-                var roomKey = data.key;
-                key = roomKey;
+                var encrypted_key = data.key;
+                var encrypted_password = data.password;
+
+                if (!secret_key)
+                {
+                    console.log("secret_key is undefined");
+                    updateStatus(`Authentication error joining room ${data.roomId}.`);
+
+                    return;
+                }
+
+                var password = decrypt(encrypted_password, secret_key);
+                key = decrypt(encrypted_key, secret_key);
 
                 console.log('socket:authenticated');
 
