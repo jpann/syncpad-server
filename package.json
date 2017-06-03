@@ -25,6 +25,7 @@
     "express-session": "^1.15.2",
     "express-validator": "^3.2.0",
     "guid": "0.0.12",
+    "human-readable-ids": "^1.0.1",
     "moment": "^2.18.1",
     "morgan": "^1.8.1",
     "passport": "^0.3.2",

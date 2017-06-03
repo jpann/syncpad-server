@@ -56,6 +56,10 @@
     <script src="/js/quill.js"></script>
     <script src="/js/moment.js"></script>
     <script src="/js/bundle.js"></script>
+    <script src="/js/knuth-shuffle/index.js"></script>
+    <script src="/js/human-readable-ids/assets/animals.js"></script>
+    <script src="/js/human-readable-ids/assets/adjectives.js"></script>
+    <script src="/js/human-readable-ids/index.js"></script>
     <link rel="stylesheet" href="/css/quill.snow.css">
 
     <link rel="stylesheet" href="/css/bootstrap.min.css">
@@ -112,6 +116,7 @@
 
                         <% if (!roomExists) { %>
                         <button type="button" class="btn btn-default generate-key" id="generate-key">Generate Password</button>
+                        <button type="button" class="btn btn-default generate-password" id="generate-password">Generate Readable Password</button>
                         <% } %>
                         <br/><br/>
 
@@ -343,6 +348,11 @@
             generateKey();
         });
 
+        $('.generate-password').click(function()
+        {
+            generatePassword();
+        });
+
         $('#cancel').click(function()
         {
             window.location.replace("/");
@@ -418,7 +428,7 @@
 
     function generatePassword()
     {
-
+        $('#room-password-setting').val(humanReadableIds.random());
     }
 
     function encrypt(text, key)
@@ -479,12 +489,17 @@
             {
                 var server_publickey = data.key;
 
+                updateStatus(`Creating public key.`);
+
                 // Generate keys for Elliptic Curve Diffie-Hellman key exchange
                 clientKey = bCrypto.createECDH('secp521r1');
                 clientKey.generateKeys('hex');
                 var client_publickey = clientKey.getPublicKey('hex');
 
                 secret_key = clientKey.computeSecret(server_publickey, 'hex', 'hex');
+
+                updateStatus(`Sending public key.`);
+
                 ack(
                 {
                     'key' : client_publickey
@@ -495,6 +510,8 @@
             {
                 console.log(`room:auth: roomID=${data.roomId}`);
 
+                updateStatus(`Initiating room authentication.`);
+
                 // requested room passport
                 ack({ 'password' : password });
             });
@@ -504,19 +521,29 @@
                 var encrypted_key = data.key;
                 var encrypted_password = data.password;
 
+                updateStatus(`Finishing key exchange.`);
+
                 if (!secret_key)
                 {
                     console.log("secret_key is undefined");
-                    updateStatus(`Authentication error joining room ${data.roomId}.`);
+                    updateStatus(`Key exchange failed. Secret is not defined.`);
 
                     return;
                 }
 
+                //TODO Sometimes this fails to decrypt the encrypted_key
                 var password = decrypt(encrypted_password, secret_key);
                 key = decrypt(encrypted_key, secret_key);
 
-                console.log('socket:authenticated');
+                if (!key)
+                {
+                    console.log("key is undefined");
+                    updateStatus(`Key exchange failed. Failed to decrypt key.`);
 
+                    return;
+                }
+
+                updateStatus(`Key exchange complete.`);
                 updateStatus(`You are now authenticated in room ${data.roomId}.`);
 
                 $('#settings-modal').modal('toggle');
@@ -649,7 +676,7 @@
                 var data = JSON.stringify(text);
                 var e_data = encrypt(data, key);
 
-                //console.log(`text-change: ${data} - e_data: ${e_data}`);
+                console.log(`text-change: ${data} - e_data: ${e_data}`);
 
                 socket.emit('text', { 'text': e_data, 'encrypted': true, 'hostname': 'web' })
             }
