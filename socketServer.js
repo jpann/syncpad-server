@@ -122,10 +122,6 @@ sockets.init = function(server)
         var rnd_password = shortid.generate();
         var key = CryptoJS.lib.WordArray.random(128 / 8).toString();
         
-        // Generate key derived from password
-        var salt = CryptoJS.lib.WordArray.random(128 / 8).toString();
-        key = crypto.pbkdf2Sync(password, salt, 100000, 512, 'sha512').toString('hex');
-
         var room = 
         {
             'roomId' : roomId,
