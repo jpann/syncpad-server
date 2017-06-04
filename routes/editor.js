@@ -42,7 +42,7 @@ function createRoom(req, res)
 
     var id = hri.random();
 
-    if (baseUrl.toLowerCase() == '/editor')
+    if (baseUrl.toLowerCase() == '/e')
     {
         id = shortid.generate();
     }
