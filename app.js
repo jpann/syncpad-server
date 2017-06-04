@@ -144,7 +144,7 @@ passport.deserializeUser(function(id, cb)
 
 app.use('/', index);
 app.use('/api', api);
-app.use('/editor', editor);
+app.use('/:t(e|editor)', editor);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next)
