@@ -2,7 +2,7 @@ var express = require('express');
 var passport = require('passport');
 var CryptoJS = require("crypto-js");
 var shortid = require('shortid');
-
+var hri = require('human-readable-ids').hri;
 var _ = require('underscore');
 
 var router = express.Router();
@@ -27,7 +27,7 @@ function checkIfRoomExists(roomId, io)
 
 function cleanRoomId(id)
 {
-    const roomId = id.toLowerCase().replace(/[^A-Za-z0-9]/g, '-');
+    const roomId = id.toLowerCase().replace(/[^A-Za-z0-9\-]/g, '-');
     if (roomId.length >= 50)
     {
         return roomId.substr(0, 50);
@@ -38,7 +38,16 @@ function cleanRoomId(id)
 
 function createRoom(req, res)
 {
-    var roomId = cleanRoomId(shortid.generate());
+    var baseUrl = req.baseUrl;
+
+    var id = hri.random();
+
+    if (baseUrl.toLowerCase() == '/editor')
+    {
+        id = shortid.generate();
+    }
+
+    var roomId = cleanRoomId(id);
 
     console.log("Created new room: " + roomId);
 
