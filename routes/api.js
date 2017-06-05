@@ -72,171 +72,6 @@ router.post('/profile/update',
         }
     });
 
-router.get('/listUsers',
-    require('connect-ensure-login').ensureLoggedIn(),
-    checkRole('admin'),
-    function(req, res, next)
-    {
-        try
-        {
-            database.getUsers(function(err, users)
-            {
-                if (!err)
-                {
-                    res.json(users);
-                }
-            });
-        }
-        catch (err)
-        {
-            next(err);
-
-            res.status(500).json({ "status": "error", "message": err.message });
-        }
-    });
-
-router.post('/addUser',
-    require('connect-ensure-login').ensureLoggedIn(),
-    checkRole('admin'),
-    function(req, res) 
-    {
-        var username = req.body.username;
-        var password = req.body.password;
-
-        try
-        {
-            req.checkBody('password', 'Password is too short.').notEmpty().isMinLength(MIN_PASSWORD_LENGTH);
-            req.checkBody('username', 'Invalid username.').notEmpty();
-
-            var errors = req.validationErrors();
-
-            if (errors)
-            {
-                var msg = "";
-
-                errors.forEach(function(element) {
-                    msg += element.msg;
-                });
-
-                res.json({ "status": "error", "message": msg });
-            }
-            else
-            {
-                database.addUser(username, password, false, function(err, user)
-                {
-                    if (!err)
-                    {
-                        res.json({ "status": "success", "user": user });
-                    }
-                    else
-                    {
-                        res.json({ "status": "error", "message": err.message });
-                    }
-                });
-            }
-            
-        }
-        catch (err)
-        {
-            console.log(err);
-
-            res.status(500).json({ "status": "error", "message": err.message });
-        }
-    });
-
-router.post('/delUser',
-    require('connect-ensure-login').ensureLoggedIn(),
-    checkRole('admin'),
-    function(req, res, next)
-    {
-        var user_id = req.body.id;
-
-        try
-        {
-            req.checkBody('id', 'Invalid ID.').notEmpty();
-
-            var errors = req.validationErrors();
-
-            if (errors)
-            {
-                var msg = "";
-
-                errors.forEach(function(element) {
-                    msg += element.msg;
-                });
-
-                res.json({ "status": "error", "message": msg });
-            }
-            else
-            {
-                database.delUser(user_id, function(err, id)
-                {
-                    if (err)
-                    {
-                        res.json({ "status": "error", "message": err.message });
-                    }
-                    else
-                    {
-                        res.json({ "status" : "success" , "result" : id });
-                    }
-                });
-            }
-        }
-        catch (err)
-        {
-            console.log(err);
-            res.status(500).json({ "status": "error", "message": err.message });
-        }
-    });
-
-router.post('/updateUser',
-    require('connect-ensure-login').ensureLoggedIn(),
-    checkRole('admin'),
-    function(req, res, next)
-    {
-        var user_id = req.body.id;
-        var password = req.body.password;
-
-        try
-        {
-            req.checkBody('password', 'Password is too short.').notEmpty().isMinLength(MIN_PASSWORD_LENGTH);
-            req.checkBody('id', 'Invalid ID.').notEmpty();
-
-            var errors = req.validationErrors();
-
-            if (errors)
-            {
-                var msg = "";
-
-                errors.forEach(function(element) {
-                    msg += element.msg;
-                });
-
-                res.json({ "status": "error", "message": msg });
-            }
-            else
-            {
-                database.updatePassword(user_id, password, function(err, id)
-                {
-                    if (!err)
-                    {
-                        res.json({ "status": "success", "id": id });
-                    }
-                    else
-                    {
-                        res.json({ "status": "error", "message": err.message });
-                    }
-                });
-            }
-        }
-        catch (err)
-        {
-            console.log(err);
-
-            res.status(500).json({ "status": "error", "message": err.message });
-        }
-    });
-
 router.get('/listClients',
     require('connect-ensure-login').ensureLoggedIn(),
     checkRole('admin'),
@@ -268,13 +103,11 @@ router.get('/listClients',
                     {
                         "roomId" : client.roomId,
                         "socketId" : socketId,
-                        "username" : client.client.user.username,
+                        "username" : client.username,
                         "rooms" : Object.keys(client.rooms),
                         "remoteAddress" : remoteAddress,
-                        "user_id" : client.client.user.user_id,
                         "namespace" : client.nsp.name,
                         "connectedTime" : connectedTime,
-                        "lastUpdateTime" : lastUpdateTime,
                     });
                 }
             }
@@ -290,68 +123,13 @@ router.get('/listClients',
         }
     });
 
-router.post('/updateUserProfile',
-    require('connect-ensure-login').ensureLoggedIn(),
-    checkRole('admin'),
-    function(req, res, next)
-    {
-        var user_id = req.body.id;
-        var max_clients = req.body.max_clients;
-        var role = req.body.role;
-        var locked = req.body.locked;
-
-        try
-        {
-            if (!locked)
-                locked = false;
-
-            req.checkBody('id', 'Invalid ID.').notEmpty();
-            req.checkBody('max_clients', 'Invalid max clients.').notEmpty().isInt().gte(2);
-            req.checkBody('role', 'Invalid role.').notEmpty().isValidRole();
-
-            var errors = req.validationErrors();
-
-            if (errors)
-            {
-                var msg = "";
-
-                errors.forEach(function(element) {
-                    msg += element.msg;
-                });
-
-                res.json({ "status": "error", "message": msg });
-            }
-            else
-            {
-                database.updateUser(user_id, max_clients, role, locked, function(err, id)
-                {
-                    if (!err)
-                    {
-                        res.json({ "status": "success", "id": id });
-                    }
-                    else
-                    {
-                        res.json({ "status": "error", "message": err.message });
-                    }
-                });
-            }
-        }
-        catch (err)
-        {
-            console.log(err);
-
-            res.status(500).json({ "status": "error", "message": err.message });
-        }
-    });
-
 router.get('/users/:roomId',
-    require('connect-ensure-login').ensureLoggedIn(),
+    //require('connect-ensure-login').ensureLoggedIn(),
     function(req, res, next)
     {
         try
         {
             var roomId = req.params.roomId;
-            var userId = req.user.user_id;
             
             if (!roomId)
             {
@@ -362,20 +140,6 @@ router.get('/users/:roomId',
 
             // get list of clients
             var sockets = Object.keys(io.sockets.adapter.rooms[roomId].sockets);
-            var userInRoom = _.find(sockets, function(id)
-            {
-                var socket = io.sockets.connected[id];
-
-                if (socket.client.user.user_id == userId)
-                {
-                    return true;
-                }
-            });
-
-            if (!userInRoom)
-            {
-                res.status(500).json({ "status": "error", "message": "Only users in the room can do this action." });
-            }
 
             var clients = [];
 
@@ -396,9 +160,7 @@ router.get('/users/:roomId',
                     clients.push(
                     {
                         "roomId" : socket.roomId,
-                        "username" : socket.client.user.username,
-                        "remoteAddress" : remoteAddress,
-                        "user_id" : socket.client.user.user_id,
+                        "username" : socket.username,
                         "connectedTime" : connectedTime,
                         "lastUpdateTime" : lastUpdateTime,
                     });
@@ -427,15 +189,3 @@ function checkRole(role)
             res.send(401, 'Unauthorized');
     };
 };
-
-function loggedIn(req, res, next) 
-{
-    if (req.user) 
-    {
-        next();
-    }
-    else 
-    {
-        res.redirect('/login');
-    }
-}

@@ -1,7 +1,7 @@
 {
   "name": "syncpad-server",
   "description": "Node.js server for syncpad-client.",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "private": true,
   "scripts": {
     "start": "set DEBUG=syncpad-server:* & node ./bin/www"
@@ -27,6 +27,7 @@
     "guid": "0.0.12",
     "human-readable-ids": "^1.0.1",
     "moment": "^2.18.1",
+    "moniker": "^0.1.2",
     "morgan": "^1.8.1",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",

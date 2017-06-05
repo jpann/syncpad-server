@@ -1,5 +1,4 @@
 var express = require('express');
-var passport = require('passport');
 var CryptoJS = require("crypto-js");
 var shortid = require('shortid');
 var hri = require('human-readable-ids').hri;
@@ -55,7 +54,6 @@ function createRoom(req, res)
 }
 
 router.get('/',
-    require('connect-ensure-login').ensureLoggedIn(),
     function(req, res, next)
     {
         try
@@ -69,7 +67,6 @@ router.get('/',
     });
 
 router.get('/:roomId',
-    require('connect-ensure-login').ensureLoggedIn(),
     function(req, res, next)
     {
         try
@@ -85,9 +82,7 @@ router.get('/:roomId',
 
             res.render('editor/editor',
                 {
-                    'user': req.user,
                     'roomId': roomId,
-                    'sid': req.sessionID,
                     'roomExists' : roomExists
                 });
         }
@@ -98,26 +93,3 @@ router.get('/:roomId',
     });
 
 module.exports = router;
-
-function checkRole(role)
-{
-    return function(req, res, next)
-    {
-        if (req.user && req.user.role == role)
-            next();
-        else
-            res.send(401, 'Unauthorized');
-    };
-};
-
-function loggedIn(req, res, next) 
-{
-    if (req.user) 
-    {
-        next();
-    }
-    else 
-    {
-        res.redirect('/login');
-    }
-}
