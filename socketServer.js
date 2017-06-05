@@ -22,7 +22,7 @@ sockets.init = function(server)
 
     let rooms = [];
 
-    var names = Moniker.generator([Moniker.adjective, Moniker.noun],
+    var names = Moniker.generator([Moniker.adjective, 'names.txt'],
     {
         'glue' : '_'
     });
