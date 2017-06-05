@@ -538,6 +538,8 @@
             $('#room-password-info').val(password);
             $('#room-username-info').val(username);
 
+            $('title').text(`${username}@${roomId} - syncpad editor`);
+
             // If modal is shown, toggle it to hide it.
             // This fixes an issue where on reconnect, it shows the modal
             if ($('#settings-modal').data()['bs.modal'].isShown)
