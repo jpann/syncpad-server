@@ -1,21 +1,16 @@
 var moment = require('moment');
-var session = require('express-session');
-var SQLiteStore = require('connect-sqlite3')(session);
-var passportSocketIo = require("passport.socketio");
-var cookieParser = require('cookie-parser');
 var async = require('async');
-
 var moment = require('moment');
 var _ = require('underscore');
 var shortid = require('shortid');
 var CryptoJS = require("crypto-js");
 var passwordHash = require('password-hash');
+var Moniker = require('moniker');
 
 var utils = require('./utils.js');
 var database = require('./database');
 const crypto = require('crypto');
 
-const SESSION_SECRET = process.env.SESSION_SECRET || 'keyboard cat';
 const ROOMID_MIN_LENGTH = process.env.ROOMID_MIN_LENGTH || 8;
 const ROOM_PASSWORD_MIN_LENGTH = process.env.ROOM_PASSWORD_MIN_LENGTH || 6;
 
@@ -27,30 +22,10 @@ sockets.init = function(server)
 
     let rooms = [];
 
-    let serverKey = 
+    var names = Moniker.generator([Moniker.adjective, Moniker.noun],
     {
-        'privatekey' : "",
-        'publickey' : "",
-        'prime' : ""
-    };
-
-    /*
-    function createServerKeys()
-    {
-        var prime = crypto.createDiffieHellman(512).getPrime('base64');
-
-        var server = crypto.createDiffieHellman(prime);
-
-        server.generateKeys('base64');
-
-        var publickey = server.getPublicKey('base64');
-        var privatekey = server.getPrivateKey('base64');
-
-        serverKey.privatekey = privatekey;
-        serverKey.publickey = publickey;
-        serverKey.prime = prime;
-    }
-    */
+        'glue' : ''
+    });
 
     //
     // Rooms code
@@ -94,8 +69,10 @@ sockets.init = function(server)
     {
         if (checkIfRoomExists(roomId))
         {
+            console.log(`${roomId} - Room exists`)
             if (verifyRoomPassword(roomId, password))
             {
+                console.log(`${roomId} - Password verified`)
                 return room = addClientToRoom(roomId, clientId);
             }
             else
@@ -119,8 +96,9 @@ sockets.init = function(server)
 
     function createRoom(roomId, password)
     {
-        var rnd_password = shortid.generate();
         var key = CryptoJS.lib.WordArray.random(128 / 8).toString();
+
+        console.log(`${roomId} - Creating room with key ${key}`)
         
         var room = 
         {
@@ -161,7 +139,13 @@ sockets.init = function(server)
 
             if (!clientExists)
             {
+                console.log(`${roomId} - Client '${clientId}' doesnt exist in room`)
+
                 room.clients.push({ 'clientId' : clientId  });
+            }
+            else
+            {
+                console.log(`${roomId} - Client '${clientId}' exists in room`)
             }
 
             return room;
@@ -190,15 +174,6 @@ sockets.init = function(server)
     // socket.io setup
     let io = require('socket.io').listen(server);
 
-    // Passport session
-    io.use(passportSocketIo.authorize({
-        key:          'connect.sid', 
-        secret:       SESSION_SECRET,
-        store:         new SQLiteStore({'db' : 'sessions', 'dir' : 'db' }), 
-        success:      onAuthorizeSuccess, 
-        fail:         onAuthorizeFail,     
-    }));
-
     // 
     // Get roomId from handshake and set it on the socket
     io.use(function(socket, next)
@@ -214,49 +189,6 @@ sockets.init = function(server)
 
         next(new Error('RoomId invalid'));
     });
-
-    function onAuthorizeSuccess(data, accept)
-    {
-        var socket = data.socket;
-        var user = data.user;
-
-        console.log(`Socket onAuthorizeSuccess: user=${user.username}`);
-
-        var username = user.username;
-        var editor_room_id = socket.RoomId;
-
-        /*
-        // 
-        // Check if max connections is exceeded
-        var numberOfClients = connectedClients.reduce(function(p,c)
-        {
-            if (username.toLowerCase() == c.client.user.username.toLowerCase())
-            {
-                p++;
-            }
-
-            return p;
-        }, 0);
-
-        if (numberOfClients > user.max_clients)
-        {
-            console.log("Max clients reached.");
-
-            accept(new Error("Max clients reached."));
-        }
-        */
-
-        accept();
-    }
-
-    function onAuthorizeFail(data, message, error, accept)
-    {
-        var socket = data.socket;
-
-        console.log('failed connection to socket.io:', message);
-
-        accept(new Error(message));
-    }
 
     io.on('connection', function(socket)
     {
@@ -304,7 +236,7 @@ sockets.init = function(server)
             var client_addr = socket.handshake.headers["x-real-ip"] || socket.request.connection.remoteAddress;
 
             var address = utils.getIpAddress(client_addr);
-            console.log(`Disconnected: '${socket.request.user.username}' [${address}].`);
+            console.log(`Disconnected: '${socket.username}' [${address}].`);
 
             if (socket.roomId != undefined)
             {
@@ -312,13 +244,10 @@ sockets.init = function(server)
                 removeConnectedClient(socket);
                 removeClientFromRoom(socket.roomId, socket.id);
 
-                // Update last connection date time
-                //updateLastConnectionDateTime(socket.request.user.user_id, moment(new Date()).format());
-
                 socket.broadcast.to(socket.roomId).emit('room:leave', 
                 { 
                     "room": socket.roomId, 
-                    "user": socket.request.user.username,
+                    "user": socket.username,
                     "address" : address
                 });
             }
@@ -327,12 +256,10 @@ sockets.init = function(server)
         // Client text update
         socket.on('text', function(msg)
         {
-            var m_user = socket.request.user.username;
+            var m_user = socket.username;
             var m_text = msg.text;
             var m_hostname = msg.hostname;
             var m_encrypted = msg.encrypted;
-
-            //console.log(`text: user: ${user}; m_text: ${m_text}`)
 
             socket.broadcast.to(socket.roomId).emit('text',
                 {
@@ -346,14 +273,14 @@ sockets.init = function(server)
         // Client 'is typing'
         socket.on('text:typing', function(msg)
         {
-            var user = socket.request.user.username;
+            var user = socket.username;
             var client_addr = socket.handshake.headers["x-real-ip"] || socket.request.connection.remoteAddress;
             var address = utils.getIpAddress(client_addr);
 
             var typing = msg.is_typing;
             var hostname = msg.hostname;
 
-            socket.client.lastUpdateTime = new Date();
+            socket.client.lastUpdateTime = moment.utc().format();
 
             socket.broadcast.to(socket.roomId).emit('text:typing',
                 {
@@ -366,7 +293,7 @@ sockets.init = function(server)
 
         socket.on('text:refresh', function(msg)
         {
-            var user = socket.request.user.username;
+            var user = socket.username;
             var client_addr = socket.handshake.headers["x-real-ip"] || socket.request.connection.remoteAddress;
 
             var address = utils.getIpAddress(client_addr);
@@ -405,9 +332,8 @@ sockets.init = function(server)
                     clients.push(
                     {
                         "roomId" : client_socket.roomId,
-                        "username" : client_socket.client.user.username,
+                        "username" : client_socket.username,
                         "remoteAddress" : remoteAddress,
-                        "user_id" : client_socket.client.user.user_id,
                         "connectedTime" : connectedTime,
                         "lastUpdateTime" : lastUpdateTime,
                     });
@@ -426,15 +352,16 @@ sockets.init = function(server)
 
         var address = utils.getIpAddress(client_addr);
 
-        var user = socket.request.user;
+        // Generate random username
+        var user = names.choose();
         var roomId = socket.roomId;
 
-        socket.client.user = user;
+        socket.username = user;
 
         socket.client.connectedTime = moment.utc().format();
         socket.client.lastUpdateTime = moment.utc().format();
 
-        console.log(`Authenticated: ${socket.request.user.username} [${address}]; room '${socket.roomId}'.`);
+        console.log(`Authenticated: ${socket.username} [${socket.id}]; room '${socket.roomId}'.`);
 
         // Elliptic Curve Diffie-Hellman key exchange
         var server = crypto.createECDH('secp521r1');
@@ -464,7 +391,8 @@ sockets.init = function(server)
             {
                 "roomId" : roomId,
                 'key' : encrypted_key,
-                'password' : encrypted_password
+                'password' : encrypted_password,
+                'username' : socket.username
             });
 
             socket.join(socket.roomId);
@@ -472,13 +400,10 @@ sockets.init = function(server)
             // Add to connectedClients
             addConnectedClient(socket);
 
-            // Update last connection date time
-            updateLastConnectionDateTime(socket.request.user.user_id, moment.utc().format());
-
             socket.broadcast.to(socket.roomId).emit('room:join', 
             { 
                 "room": socket.roomId, 
-                "user": socket.request.user.username,
+                "user": socket.username,
                 "address" : address
             });
 
@@ -488,7 +413,7 @@ sockets.init = function(server)
                 socket.id,
                 "text:latest",
                 {
-                    "user": socket.request.user.username,
+                    "user": socket.username,
                     "address": address,
                     "id": socket.id
                 });
@@ -570,7 +495,7 @@ sockets.init = function(server)
 
         for (var i = 0; i < connectedClients.length; i++)
         {
-            if (username.toLowerCase() == connectedClients[i].client.user.username.toLowerCase())
+            if (username.toLowerCase() == connectedClients[i].username.toLowerCase())
             {
                 count++;
             }

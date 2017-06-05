@@ -7,7 +7,6 @@ var router = express.Router();
 var database = require('./../database');
 var utils = require('./../utils.js');
 
-/* GET home page. */
 router.get('/',
     loggedIn,
     function(req, res, next)
@@ -27,8 +26,8 @@ router.get('/login',
 router.post('/login',
     passport.authenticate('local',
         {
-            successReturnToOrRedirect: '/',
-            failureRedirect: '/login',
+            successReturnToOrRedirect: '/admin',
+            failureRedirect: '/admin/login',
             failureFlash: true
         }));
 
@@ -36,7 +35,7 @@ router.get('/logout',
     function(req, res)
     {
         req.logout();
-        res.redirect('/');
+        res.redirect('/admin');
     });
 
 router.get('/profile',
@@ -47,51 +46,6 @@ router.get('/profile',
         { 
             "user": req.user
         });
-    });
-
-router.get('/profile/:id',
-    require('connect-ensure-login').ensureLoggedIn(),
-    checkRole('admin'),
-    function(req, res)
-    {
-        var user_id = req.params.id;
-
-        try
-        {
-            database.getUserById(user_id, function(err, user)
-            {
-                if (!err && user)
-                {
-                    res.render('editUser', { "edit_user": user, "user": req.user });
-                }
-                else
-                {
-                    res.redirect('/listUsers', { "user": req.user });
-                }
-            });
-        }
-        catch (err)
-        {
-            console.log(err);
-
-            res.status(500).send('Error')
-            next(err);
-        }
-    });
-
-router.get('/users',
-    require('connect-ensure-login').ensureLoggedIn(),
-    checkRole('admin'),
-    function(req, res, next)
-    {
-        try
-        {
-            res.render('listUsers', { user: req.user });
-        }
-        catch (err)
-        {
-            next(err);
-        }
     });
 
 router.get('/clients',
@@ -130,6 +84,6 @@ function loggedIn(req, res, next)
     }
     else 
     {
-        res.redirect('/login');
+        res.redirect('/admin/login');
     }
 }

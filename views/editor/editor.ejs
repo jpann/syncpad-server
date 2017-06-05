@@ -67,7 +67,7 @@
 </head>
 
 <body>
-    <%- include('../partials/header', {user: user}) %>
+    <%- include('../partials/editor-header') %>
 
         <div class="container" id="editor-container">
             <div id="toolbar">
@@ -151,6 +151,10 @@
                         <h4 class="modal-title">Editor Room Info</h4>
                     </div>
                     <div class="modal-body">
+                        <h6>Your Username:</h6>
+                        <p>
+                            <input type="text" class="form-control room-username-info" id="room-username-info" readonly/>
+                        </p>
                         <h6>Room ID:</h6>
                         <p>
                             <input type="text" class="form-control room-id-info" id="room-id-info" readonly/>
@@ -180,7 +184,6 @@
                                     <th class="col-md-1"><small>Username</small></th>
                                     <th class="col-md-2"><small>Time Connected</small></th>
                                     <th class="col-md-2"><small>Time Idle</small></th>
-                                    <th class="col-md-4"><small>Remote Address</small></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -236,7 +239,6 @@
 </body>
 <input type="hidden" id="password" value="">
 <input type="hidden" id="roomId" value="<%= roomId %>">
-<input type="hidden" id="sid" value="<%= sid %>">
 
 <script>
     $(function()
@@ -300,16 +302,12 @@
                     $.each(data, function(id)
                     {
                         var client = data[id];
-                        
-                        console.log("-> " + moment(client.connectedTime).local().format("YYYY MM DD, h:mm:ss a"));
-
 
                         $('#user-table tbody').append(`
                         <tr>
                             <td>${client.username}</td>
                             <td>${moment(client.connectedTime).local().fromNow()}</td>
                             <td>${moment(client.lastUpdateTime).local().fromNow()}</td>
-                            <td>${client.remoteAddress}</td>
                         </tr>
                         `);
                     });
@@ -327,8 +325,8 @@
 
         $('#info-button').click(function()
         {
-            $('#room-id-info').val($('#roomId').val());
-            $('#room-password-info').val($('#password').val());
+            //$('#room-id-info').val($('#roomId').val());
+            //$('#room-password-info').val($('#password').val());
 
             $('#info-modal').modal('toggle');
         });
@@ -359,27 +357,20 @@
 
             if (password && password.length >= 6)
             {
-                //TODO Should we store this on the page or just in memory?
                 $('#password').val(password);
 
-                var sid = $('#sid').val();
                 var roomId = $('#roomId').val();
 
-                console.log(`Connect.click - Sid: ${sid}; RoomID: ${roomId}; password: ${password}`);
-
-                if (sid && roomId && password)
+                if (roomId && password)
                 {
-                    console.log("connecting...");
-
                     updateStatus(`Connecting to room ${roomId}...`);
 
-                    //TODO Should figure out how to get the sid from the cookie
-
-                    connect(sid, roomId, password);
+                    connect(roomId, password);
                 }
                 else
                 {
-                    console.log("no sid, room id, or password");
+                    errorAlert('Error: Invalid room ID or password.');
+
                 }
             }
             else
@@ -455,12 +446,10 @@
         });
     }
 
-    function connect(sid, roomId, password)
+    function connect(roomId, password)
     {
         let key = ""; // store encryption key in memory
         let clientKey = null; // store DH key
-
-        console.log(`Connect - Sid: ${sid}; RoomID: ${roomId}; password: ${password}`);
 
         var editor = new Quill('#editor',
             {
@@ -472,193 +461,188 @@
 
         var socket = io('//' + window.location.host,
             {
-                query: 'session_id=' + sid + '&roomId=' + roomId
+                query: '&roomId=' + roomId,
+                reconnectionDelay : 10000,
             });
 
         let secret_key = null;
         socket.on('connect', function()
         {
             updateStatus(`You connected to the server.`);
+        });
 
-            socket.on('auth:exchange', function(data, ack)
+        socket.on('auth:exchange', function(data, ack)
+        {
+            var server_publickey = data.key;
+
+            updateStatus(`Creating public key.`);
+
+            // Generate keys for Elliptic Curve Diffie-Hellman key exchange
+            clientKey = bCrypto.createECDH('secp521r1');
+            clientKey.generateKeys('hex');
+            var client_publickey = clientKey.getPublicKey('hex');
+
+            secret_key = clientKey.computeSecret(server_publickey, 'hex', 'hex');
+
+            console.log('auth:exchange secret_key: ' + secret_key);
+
+            updateStatus(`Sending public key.`);
+
+            ack(
             {
-                var server_publickey = data.key;
-
-                updateStatus(`Creating public key.`);
-
-                // Generate keys for Elliptic Curve Diffie-Hellman key exchange
-                clientKey = bCrypto.createECDH('secp521r1');
-                clientKey.generateKeys('hex');
-                var client_publickey = clientKey.getPublicKey('hex');
-
-                secret_key = clientKey.computeSecret(server_publickey, 'hex', 'hex');
-
-                updateStatus(`Sending public key.`);
-
-                ack(
-                {
-                    'key' : client_publickey
-                });
+                'key' : client_publickey
             });
+        });
 
-            socket.on('room:auth', function(data, ack)
+        socket.on('room:auth', function(data, ack)
+        {
+            updateStatus(`Initiating room authentication.`);
+
+            // requested room passport
+            ack({ 'password' : password });
+        });
+
+        socket.on('authenticated', function(data) 
+        {
+            var encrypted_key = data.key;
+            var encrypted_password = data.password;
+            var username = data.username;
+            var roomId = data.roomId;
+
+            updateStatus(`Finishing key exchange.`);
+
+            if (!secret_key)
             {
-                console.log(`room:auth: roomID=${data.roomId}`);
+                updateStatus(`Key exchange failed. Secret is not defined.`);
 
-                updateStatus(`Initiating room authentication.`);
+                return;
+            }
 
-                // requested room passport
-                ack({ 'password' : password });
-            });
+            console.log('authenticated secret_key: ' + secret_key);
 
-            socket.on('authenticated', function(data) 
+            //TODO Sometimes this fails to decrypt the encrypted_key
+            var password = decrypt(encrypted_password, secret_key);
+            key = decrypt(encrypted_key, secret_key);
+
+            if (!key)
             {
-                var encrypted_key = data.key;
-                var encrypted_password = data.password;
+                updateStatus(`Key exchange failed. Failed to decrypt key.`);
 
-                updateStatus(`Finishing key exchange.`);
+                return;
+            }
 
-                if (!secret_key)
-                {
-                    console.log("secret_key is undefined");
-                    updateStatus(`Key exchange failed. Secret is not defined.`);
+            updateStatus(`Key exchange complete.`);
+            updateStatus(`You are now authenticated in room ${data.roomId}.`);
 
-                    return;
-                }
+            $('#room-id-info').val(roomId);
+            $('#room-password-info').val(password);
+            $('#room-username-info').val(username);
 
-                //TODO Sometimes this fails to decrypt the encrypted_key
-                var password = decrypt(encrypted_password, secret_key);
-                key = decrypt(encrypted_key, secret_key);
-
-                if (!key)
-                {
-                    console.log("key is undefined");
-                    updateStatus(`Key exchange failed. Failed to decrypt key.`);
-
-                    return;
-                }
-
-                updateStatus(`Key exchange complete.`);
-                updateStatus(`You are now authenticated in room ${data.roomId}.`);
-
+            // If modal is shown, toggle it to hide it.
+            // This fixes an issue where on reconnect, it shows the modal
+            if ($('#settings-modal').data()['bs.modal'].isShown)
                 $('#settings-modal').modal('toggle');
-            });
+        });
 
-            socket.on('unauthorized', function(data) 
+        socket.on('unauthorized', function(data) 
+        {
+            var msg = data.message;
+            var roomId = data.roomId;
+
+            updateStatus(`You are not authorized in room ${data.roomId}: ${msg}`);
+            errorAlert(`You are not authorized in room ${data.roomId}: ${msg}`);
+        });
+
+        socket.on('connect_error', function(err)
+        {
+            updateStatus(`connect_error: ${err.error}`);
+            errorAlert(`connect_error: ${err.error}`);
+        });
+
+        socket.on('connect_timeout', function(err)
+        {
+            updateStatus(`connect_timeout: ${err.error}`);
+            errorAlert(`connect_timeout: ${err.error}`);
+        });
+
+        socket.on('error', function(err)
+        {
+            updateStatus(`Error: ${err.error}`);
+            errorAlert(`Error: ${err.error}`);
+        });
+
+        socket.on('disconnect', function(err)
+        {
+            updateStatus(`Disconnected from server.`);
+        });
+
+        socket.on('room:join', function(data)
+        {
+            updateStatus(`User ${data.user} joined the room from '${data.address}'.`);
+            notify(`User ${data.user} joined the room from '${data.address}'.`);
+        });
+
+        socket.on('room:leave', function(data)
+        {
+            updateStatus(`User ${data.user} left the room from '${data.address}'.`);
+            notify(`User ${data.user} left the room from '${data.address}'.`);
+        });
+
+        // Received request to get latest text body
+        socket.on('text:latest', function(data)
+        {
+            var m_user = data.user;
+            var m_address = data.address;
+            var m_socketId = data.id;
+
+            var text = editor.getContents();
+
+            var data = JSON.stringify(text);
+            var e_text = encrypt(data, key);
+
+            console.log('text:latest: ' + data);
+
+            socket.emit('text:refresh', { 'id': m_socketId, 'text': e_text });
+        });
+
+        socket.on('text', function(data)
+        {
+            var m_user = data.user;
+            var m_text = data.text;
+            var m_address = data.address;
+            var m_encrypted = data.encrypted;
+            var m_hostname = data.hostname;
+
+            var d_text = decrypt(m_text, key);
+            var data = JSON.parse(d_text);
+
+            editor.updateContents(data, "silent");
+        });
+
+        socket.on('text:typing', function(data)
+        {
+            //console.log("socket - text:typing - " + data.hostname);
+        });
+
+        socket.once('text:refresh', function(data)
+        {
+            var m_text = data.text;
+            var m_hostname = data.hostname;
+
+            var d_text = decrypt(m_text, key);
+
+            if (d_text)
             {
-                var msg = data.message;
-                var roomId = data.roomId;
-
-                console.log('socket:unauthorized: ' + msg);
-
-                updateStatus(`You are not authorized in room ${data.roomId}: ${msg}`);
-                errorAlert(`You are not authorized in room ${data.roomId}: ${msg}`);
-            });
-
-            socket.on('connect_error', function(err)
-            {
-                console.log('socket:error:connection: ' + JSON.stringify(err));
-
-                updateStatus(`connect_error: ${err.error}`);
-                errorAlert(`connect_error: ${err.error}`);
-            });
-
-            socket.on('connect_timeout', function(err)
-            {
-                console.log('socket:error:timeout: ' + err.error);
-
-                updateStatus(`connect_timeout: ${err.error}`);
-                errorAlert(`connect_timeout: ${err.error}`);
-            });
-
-            socket.on('error', function(err)
-            {
-                console.log('socket:error: ' + JSON.stringify(err));
-
-                //TODO Redirect on error?
-                updateStatus(`Error: ${err.error}`);
-                errorAlert(`Error: ${err.error}`);
-            });
-
-            socket.on('disconnect', function(err)
-            {
-                updateStatus(`Disconnected from server.`);
-                //errorAlert(`Disconnected from server.`);
-            });
-
-            socket.on('room:join', function(data)
-            {
-                //console.log('room:join ' + JSON.stringify(data));
-
-                updateStatus(`User ${data.user} joined the room from '${data.address}'.`);
-                notify(`User ${data.user} joined the room from '${data.address}'.`);
-            });
-
-            socket.on('room:leave', function(data)
-            {
-                //console.log('room:leave ' + JSON.stringify(data));
-
-                updateStatus(`User ${data.user} left the room from '${data.address}'.`);
-                notify(`User ${data.user} left the room from '${data.address}'.`);
-            });
-
-            // Received request to get latest text body
-            socket.on('text:latest', function(data)
-            {
-                var m_user = data.user;
-                var m_address = data.address;
-                var m_socketId = data.id;
-
-                var text = editor.getContents();
-                //console.log(JSON.stringify(text));
-
-                var data = JSON.stringify(text);
-                var e_text = encrypt(data, key);
-
-                socket.emit('text:refresh', { 'id': m_socketId, 'text': e_text });
-            });
-
-            socket.on('text', function(data)
-            {
-                var m_user = data.user;
-                var m_text = data.text;
-                var m_address = data.address;
-                var m_encrypted = data.encrypted;
-                var m_hostname = data.hostname;
-
-                //console.log("socket - text: " + JSON.stringify(data));
-
-                var d_text = decrypt(m_text, key);
                 var data = JSON.parse(d_text);
 
-                editor.updateContents(data, "silent");
-            });
+                console.log('text:refresh: ' + d_text);
 
-            socket.on('text:typing', function(data)
+                editor.setContents(data, "silent");
+            }
+            else
             {
-                //console.log("socket - text:typing - " + data.hostname);
-            });
-
-            socket.once('text:refresh', function(data)
-            {
-
-                var m_text = data.text;
-                var m_hostname = data.hostname;
-
-                var d_text = decrypt(m_text, key);
-
-                if (d_text)
-                {
-                    var data = JSON.parse(d_text);
-
-                    editor.updateContents(data, "silent");
-                }
-                else
-                {
-                    console.log("socket - text:refresh: failed parsing json")
-                }
-
-            });
+                updateStatus("Editor refresh failed.")
+            }
         });
 
         editor.on('text-change', function(delta, oldDelta, source) 
@@ -670,8 +654,6 @@
 
                 var data = JSON.stringify(text);
                 var e_data = encrypt(data, key);
-
-                console.log(`text-change: ${data} - e_data: ${e_data}`);
 
                 socket.emit('text', { 'text': e_data, 'encrypted': true, 'hostname': 'web' })
             }

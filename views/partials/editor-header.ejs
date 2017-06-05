@@ -11,21 +11,8 @@
     
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
-        <li class="active"><a href="/admin">Home</a></li>
-        <li><a href="/admin/profile">My Profile</a></li>
         <li><a href="/editor">Create Editor</a></li>
         <li><a href="/e">Create Editor (Short ID)</a></li>
-
-        <% if (user.role == 'admin') { %>
-          <li><a href="/admin/clients">Client List</a></li>
-          <% } %>
-
-      </ul>
-      <ul class="nav navbar-nav navbar-right">
-        <% if (user) { %>
-        <p class="navbar-text navbar-left">Signed in as <%= user.username %></p>
-        <% } %>
-        <li><a href="/admin/logout"><span class="glyphicon glyphicon-log-out"></span> Log Out</a></li>
       </ul>
     </div>
   </div>

@@ -142,9 +142,13 @@ passport.deserializeUser(function(id, cb)
     });
 });
 
-app.use('/', index);
+app.use('/admin', index);
 app.use('/api', api);
 app.use('/:t(e|editor)', editor);
+app.get('/', function(req, res) 
+{
+    res.redirect('/editor');
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next)
