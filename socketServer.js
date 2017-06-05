@@ -24,7 +24,7 @@ sockets.init = function(server)
 
     var names = Moniker.generator([Moniker.adjective, Moniker.noun],
     {
-        'glue' : ''
+        'glue' : '_'
     });
 
     //
