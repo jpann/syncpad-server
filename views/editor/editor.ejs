@@ -581,13 +581,13 @@
         socket.on('room:join', function(data)
         {
             updateStatus(`User ${data.user} joined the room from '${data.address}'.`);
-            notify(`User ${data.user} joined the room from '${data.address}'.`);
+            notify(`User ${data.user} joined the room.`);
         });
 
         socket.on('room:leave', function(data)
         {
             updateStatus(`User ${data.user} left the room from '${data.address}'.`);
-            notify(`User ${data.user} left the room from '${data.address}'.`);
+            notify(`User ${data.user} left the room.`);
         });
 
         // Received request to get latest text body
