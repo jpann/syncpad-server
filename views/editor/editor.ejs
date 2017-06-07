@@ -98,25 +98,25 @@
                     <div class="modal-body">
                         <p>
                         <% if (roomExists) { %>
-                        This room already exists, so in the field below you will need to enter the previously set password to join the room.
+                        This room already exists, so in the field below you will need to enter the previously set passcode to join the room.
                         <% } else { %>
-                        You are creating a new room. In order to create a new room you will need to specify a password for the room. You will need to remember this password in order to join it from another editor or to share the room with others.
+                        You are creating a new room. In order to create a new room you will need to specify a passcode for the room. You will need to remember this passcode in order to join it from another editor or to share the room with others.
                         <% } %>
                         </p>
                         <br/>
                         
                         <% if (roomExists) { %>
-                        <h5>Enter the password to join the room:</h5>
+                        <h5>Enter the passcode to join the room:</h5>
                         <% } else { %>
-                        <h5>Enter a new password for this room:</h5>
+                        <h5>Enter a new passcode for this room:</h5>
                         <% } %>
                         <p>
-                            <input type="text" class="form-control room-password-setting" id="room-password-setting" />
+                            <input type="text" class="form-control room-passcode-setting" id="room-passcode-setting" />
                         </p>
 
                         <% if (!roomExists) { %>
-                        <button type="button" class="btn btn-default generate-key" id="generate-key">Generate Password</button>
-                        <button type="button" class="btn btn-default generate-password" id="generate-password">Generate Readable Password</button>
+                        <button type="button" class="btn btn-default generate-key" id="generate-key">Generate Passcode</button>
+                        <button type="button" class="btn btn-default generate-passcode" id="generate-passcode">Generate Readable Passcode</button>
                         <% } %>
                         <br/><br/>
 
@@ -124,7 +124,7 @@
                         <p>
                             If you wish to share this room with another person, you can send them the url below.
                             <br/><br/>
-                            When they go to the url below, they will be prompted to enter the room password, so you will need to let them know the password you specified above.
+                            When they go to the url below, they will be prompted to enter the room passcode, so you will need to let them know the passcode you specified above.
                             <br/><br/>
                             <input type="text" class="form-control" id="share-url" readonly/>
                         </p>
@@ -159,9 +159,9 @@
                         <p>
                             <input type="text" class="form-control room-id-info" id="room-id-info" readonly/>
                         </p>
-                        <h6>Room Password:</h6>
+                        <h6>Room Passcode:</h6>
                         <p>
-                            <input type="text" class="form-control room-password-info" id="room-password-info" readonly/>
+                            <input type="text" class="form-control room-passcode-info" id="room-passcode-info" readonly/>
                         </p>
                     </div>
                     <div class="modal-footer">
@@ -237,7 +237,7 @@
         </div>
     </div>
 </body>
-<input type="hidden" id="password" value="">
+<input type="hidden" id="passcode" value="">
 <input type="hidden" id="roomId" value="<%= roomId %>">
 
 <script>
@@ -326,7 +326,7 @@
         $('#info-button').click(function()
         {
             //$('#room-id-info').val($('#roomId').val());
-            //$('#room-password-info').val($('#password').val());
+            //$('#room-passcode-info').val($('#passcode').val());
 
             $('#info-modal').modal('toggle');
         });
@@ -341,9 +341,9 @@
             generateKey();
         });
 
-        $('.generate-password').click(function()
+        $('.generate-passcode').click(function()
         {
-            generatePassword();
+            generatePasscode();
         });
 
         $('#cancel').click(function()
@@ -353,29 +353,29 @@
 
         $('.connect').click(function()
         {
-            var password = $('#room-password-setting').val();
+            var passcode = $('#room-passcode-setting').val();
 
-            if (password && password.length >= 6)
+            if (passcode && passcode.length >= 6)
             {
-                $('#password').val(password);
+                $('#passcode').val(passcode);
 
                 var roomId = $('#roomId').val();
 
-                if (roomId && password)
+                if (roomId && passcode)
                 {
                     updateStatus(`Connecting to room ${roomId}...`);
 
-                    connect(roomId, password);
+                    connect(roomId, passcode);
                 }
                 else
                 {
-                    errorAlert('Error: Invalid room ID or password.');
+                    errorAlert('Error: Invalid room ID or passcode.');
 
                 }
             }
             else
             {
-                errorAlert('Please provide a password that is more than 6 characters.');
+                errorAlert('Please provide a passcode that is more than 6 characters.');
             }
         });
     });
@@ -409,12 +409,12 @@
     {
         var key = CryptoJS.lib.WordArray.random(128 / 8).toString();
 
-        $('#room-password-setting').val(key);
+        $('#room-passcode-setting').val(key);
     }
 
-    function generatePassword()
+    function generatePasscode()
     {
-        $('#room-password-setting').val(humanReadableIds.random());
+        $('#room-passcode-setting').val(humanReadableIds.random());
     }
 
     function encrypt(text, key)
@@ -446,7 +446,7 @@
         });
     }
 
-    function connect(roomId, password)
+    function connect(roomId, passcode)
     {
         let key = ""; // store encryption key in memory
         let clientKey = null; // store DH key
@@ -499,13 +499,13 @@
             updateStatus(`Initiating room authentication.`);
 
             // requested room passport
-            ack({ 'password' : password });
+            ack({ 'passcode' : passcode });
         });
 
         socket.on('authenticated', function(data) 
         {
             var encrypted_key = data.key;
-            var encrypted_password = data.password;
+            var encrypted_passcode = data.passcode;
             var username = data.username;
             var roomId = data.roomId;
 
@@ -521,7 +521,7 @@
             console.log('authenticated secret_key: ' + secret_key);
 
             //TODO Sometimes this fails to decrypt the encrypted_key
-            var password = decrypt(encrypted_password, secret_key);
+            var passcode = decrypt(encrypted_passcode, secret_key);
             key = decrypt(encrypted_key, secret_key);
 
             if (!key)
@@ -535,7 +535,7 @@
             updateStatus(`You are now authenticated in room ${data.roomId}.`);
 
             $('#room-id-info').val(roomId);
-            $('#room-password-info').val(password);
+            $('#room-passcode-info').val(passcode);
             $('#room-username-info').val(username);
 
             $('title').text(`${username}@${roomId} - syncpad editor`);
