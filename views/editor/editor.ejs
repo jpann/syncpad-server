@@ -42,28 +42,70 @@
         .qt-toolbar.qt-snow {
             padding: 4px;
         }
+
+        #chat-panel {
+            margin-bottom: 0;
+            height: 90vh;
+            max-height: 90vh;
+            position: relative;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        #chat-panel-body {
+            overflow: auto;
+            position: absolute;
+            top: 55px;
+            bottom: 55px;
+            left: 0;
+            right: 0;
+        }
+
+        #chat-panel-footer {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+
+        #chat-panel-bar {
+            top: 6%;
+            height: 90vh;
+            max-height: 90vh;
+            width: 30%;
+        }
     </style>
+
+    <script src="/js/quill.js"></script>
+    <link rel="stylesheet" href="/css/quill.snow.css">
+
     <script src="/js/jquery-3.2.1.min.js"></script>
 
     <script src="/js/jquery.validate.js"></script>
     <script src="/js/additional-methods.js"></script>
+
     <script src="/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <script src="/js/jasny-bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/css/jasny-bootstrap.min.css">
 
     <script src="/js/cryptojslib/rollups/aes.js"></script>
     <script src="/js/cryptojslib/rollups/pbkdf2.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js" integrity="sha256-lDaoGuONbVHFEV6ZW3GowBu4ECOTjDE14hleNVBvDW8="
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js" 
+        integrity="sha256-lDaoGuONbVHFEV6ZW3GowBu4ECOTjDE14hleNVBvDW8="
         crossorigin="anonymous"></script>
-    <script src="/js/quill.js"></script>
+    
     <script src="/js/moment.js"></script>
     <script src="/js/bundle.js"></script>
     <script src="/js/knuth-shuffle/index.js"></script>
     <script src="/js/human-readable-ids/assets/animals.js"></script>
     <script src="/js/human-readable-ids/assets/adjectives.js"></script>
     <script src="/js/human-readable-ids/index.js"></script>
-    <link rel="stylesheet" href="/css/quill.snow.css">
-
-    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    
     <script src="/js/notify.js"></script>
+    
+
 </head>
 
 <body>
@@ -71,9 +113,10 @@
 
         <div class="container" id="editor-container">
             <div id="toolbar">
-                <button id="debug-info-button" class="glyphicon glyphicon glyphicon-eye-open" data-toggle="tooltip" data-placement="top" title="Debug Info"></button>
-                <button id="info-button" class="glyphicon glyphicon glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="top" title="Editor Info"></button>
-                <button id="users-button" class="glyphicon glyphicon glyphicon glyphicon glyphicon-user" data-toggle="tooltip" data-placement="top" title="Users"></button>
+                <button id="debug-info-button" class="glyphicon glyphicon-eye-open" data-toggle="tooltip" data-placement="top" title="Debug Info"></button>
+                <button id="info-button" class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="top" title="Editor Info"></button>
+                <button id="users-button" class="glyphicon glyphicon-cloud" data-toggle="tooltip" data-placement="top" title="Users"></button>
+                <button id="chat-button" class="glyphicon glyphicon-user" data-toggle="offcanvas" data-target="#chat-panel-bar" title="Open Chat"></button>
 
                 <select class="ql-size">
                     <option value="huge"></option>
@@ -236,6 +279,25 @@
             </div>
         </div>
     </div>
+
+    <nav id="chat-panel-bar" class="navmenu navmenu-default navmenu-fixed-right offcanvas" role="navigation">
+        <div class="panel panel-primary" id="chat-panel">
+
+            <div class="panel-heading" id="chat-panel-heading">Chat</div>
+            <div class="panel-body" id="chat-panel-body">
+                <ul class="list-group" id="chat-panel-messages">          
+                </ul>
+            </div>
+            <div class="panel-footer" id="chat-panel-footer">
+                <div class="input-group">
+                    <input id="chat-panel-msg" type="text" class="form-control" placeholder="Send message">
+                    <span class="input-group-btn">
+                        <button id="chat-panel-send" class="btn btn-default" type="button">Send</button>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
 </body>
 <input type="hidden" id="passcode" value="">
 <input type="hidden" id="roomId" value="<%= roomId %>">
@@ -642,6 +704,19 @@
             }
         });
 
+        socket.on('chat:msg', function(data)
+        {
+            var username = data.user;
+            var msg = data.message;
+
+            if (msg == undefined)
+                return;
+
+            // decrypt
+            var text = decrypt(msg, key);
+            appendChat(username, text);
+        });
+
         editor.on('text-change', function(delta, oldDelta, source) 
         {
             if (source == 'user')
@@ -663,8 +738,44 @@
                 socket.emit('text:typing');
             }
         });
-    }
 
+        // Chat
+        $('#chat-panel-send').click(function()
+        {   
+            sendMessage();
+        });
+
+        $('#chat-panel-msg').on("keydown", function(event)
+        {
+            if (event.which == 13)
+            {
+                sendMessage();
+            }
+        });
+
+        function sendMessage()
+        {
+            var msg = $('#chat-panel-msg').val();
+
+            if (msg == undefined)
+                return;
+
+            var encrypted_msg = encrypt(msg, key);
+
+            socket.emit('chat:msg', { 'message' : encrypted_msg });
+
+            var username = $('#room-username-info').val();
+            appendChat(username, msg);
+
+            $('#chat-panel-msg').val("");
+        }
+        function appendChat(username, msg)
+        {
+            $('#chat-panel-messages').append($('<li class="list-group-item">').html($(`<h4 class="list-group-item-heading">${username}</h4><p class="list-group-item-text">${msg}</p>`)));
+
+            $("#chat-panel-body").scrollTop($("#chat-panel-body")[0].scrollHeight);
+        }
+    }
 </script>
 
 </html>
