@@ -261,6 +261,8 @@ sockets.init = function(server)
             var m_hostname = msg.hostname;
             var m_encrypted = msg.encrypted;
 
+            socket.client.lastUpdateTime = moment.utc().format();
+
             socket.broadcast.to(socket.roomId).emit('text',
                 {
                     "user": m_user,
@@ -277,8 +279,7 @@ sockets.init = function(server)
             var client_addr = socket.handshake.headers["x-real-ip"] || socket.request.connection.remoteAddress;
             var address = utils.getIpAddress(client_addr);
 
-            var typing = msg.is_typing;
-            var hostname = msg.hostname;
+            //var hostname = msg.hostname;
 
             socket.client.lastUpdateTime = moment.utc().format();
 
@@ -286,8 +287,7 @@ sockets.init = function(server)
                 {
                     "user": user,
                     "address": address,
-                    "is_typing": typing,
-                    "hostname": hostname
+                    //"hostname": hostname
                 });
         });
 
