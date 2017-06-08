@@ -332,6 +332,18 @@ sockets.init = function(server)
 
             ack(clients);
         });
+
+        socket.on('chat:msg', function(data)
+        {
+            var username = socket.username;
+            var msg = data.message;
+
+            socket.broadcast.to(socket.roomId).emit('chat:msg',
+                {
+                    "user": username,
+                    "message" : msg
+                });
+        });
     });
 
     //
