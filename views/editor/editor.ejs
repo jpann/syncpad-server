@@ -660,6 +660,14 @@
                 socket.emit('text', { 'text': e_data, 'encrypted': true, 'hostname': 'web' })
             }
         });
+
+        editor.on('selection-change', function(range ,oldRange, source)
+        {
+            if (range)
+            {
+                socket.emit('text:typing');
+            }
+        });
     }
 
 </script>
