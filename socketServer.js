@@ -247,8 +247,7 @@ sockets.init = function(server)
                 socket.broadcast.to(socket.roomId).emit('room:leave', 
                 { 
                     "room": socket.roomId, 
-                    "user": socket.username,
-                    "address" : address
+                    "user": socket.username
                 });
             }
         });
@@ -258,8 +257,6 @@ sockets.init = function(server)
         {
             var m_user = socket.username;
             var m_text = msg.text;
-            var m_hostname = msg.hostname;
-            var m_encrypted = msg.encrypted;
 
             socket.client.lastUpdateTime = moment.utc().format();
 
@@ -267,8 +264,6 @@ sockets.init = function(server)
                 {
                     "user": m_user,
                     "text": m_text,
-                    "encrypted": m_encrypted,
-                    "hostname": m_hostname
                 });
         });
 
@@ -279,15 +274,11 @@ sockets.init = function(server)
             var client_addr = socket.handshake.headers["x-real-ip"] || socket.request.connection.remoteAddress;
             var address = utils.getIpAddress(client_addr);
 
-            //var hostname = msg.hostname;
-
             socket.client.lastUpdateTime = moment.utc().format();
 
             socket.broadcast.to(socket.roomId).emit('text:typing',
                 {
                     "user": user,
-                    "address": address,
-                    //"hostname": hostname
                 });
         });
 
@@ -300,7 +291,7 @@ sockets.init = function(server)
             var id = msg.id;
             var text = msg.text;
 
-            socket.broadcast.to(id).emit('text:refresh', { "text": text, "hostname": address });
+            socket.broadcast.to(id).emit('text:refresh', { "text": text });
         });
 
         // Get list of users in room by RoomId
@@ -333,7 +324,6 @@ sockets.init = function(server)
                     {
                         "roomId" : client_socket.roomId,
                         "username" : client_socket.username,
-                        "remoteAddress" : remoteAddress,
                         "connectedTime" : connectedTime,
                         "lastUpdateTime" : lastUpdateTime,
                     });
@@ -404,7 +394,6 @@ sockets.init = function(server)
             { 
                 "room": socket.roomId, 
                 "user": socket.username,
-                "address" : address
             });
 
             // Emit to every other client in the room asking them to send back a text:refresh with the latest text
@@ -414,7 +403,6 @@ sockets.init = function(server)
                 "text:latest",
                 {
                     "user": socket.username,
-                    "address": address,
                     "id": socket.id
                 });
         });
