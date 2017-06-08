@@ -714,7 +714,9 @@
 
             // decrypt
             var text = decrypt(msg, key);
+            
             appendChat(username, text);
+            notify(`Message from ${username}.`);
         });
 
         editor.on('text-change', function(delta, oldDelta, source) 
