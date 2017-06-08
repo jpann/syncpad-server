@@ -580,13 +580,13 @@
 
         socket.on('room:join', function(data)
         {
-            updateStatus(`User ${data.user} joined the room from '${data.address}'.`);
+            updateStatus(`User ${data.user} joined the room.`);
             notify(`User ${data.user} joined the room.`);
         });
 
         socket.on('room:leave', function(data)
         {
-            updateStatus(`User ${data.user} left the room from '${data.address}'.`);
+            updateStatus(`User ${data.user} left the room from.`);
             notify(`User ${data.user} left the room.`);
         });
 
@@ -594,7 +594,6 @@
         socket.on('text:latest', function(data)
         {
             var m_user = data.user;
-            var m_address = data.address;
             var m_socketId = data.id;
 
             var text = editor.getContents();
@@ -611,9 +610,6 @@
         {
             var m_user = data.user;
             var m_text = data.text;
-            var m_address = data.address;
-            var m_encrypted = data.encrypted;
-            var m_hostname = data.hostname;
 
             var d_text = decrypt(m_text, key);
             var data = JSON.parse(d_text);
@@ -623,13 +619,12 @@
 
         socket.on('text:typing', function(data)
         {
-            //console.log("socket - text:typing - " + data.hostname);
+ 
         });
 
         socket.once('text:refresh', function(data)
         {
             var m_text = data.text;
-            var m_hostname = data.hostname;
 
             var d_text = decrypt(m_text, key);
 
@@ -657,7 +652,7 @@
                 var data = JSON.stringify(text);
                 var e_data = encrypt(data, key);
 
-                socket.emit('text', { 'text': e_data, 'encrypted': true, 'hostname': 'web' })
+                socket.emit('text', { 'text': e_data })
             }
         });
 
