@@ -68,6 +68,12 @@
             left: 0;
         }
 
+        #chat-panel-heading {
+            background-image: none;
+            background-color: black;
+            color: white;
+        }
+
         #chat-panel-bar {
             top: 6%;
             height: 90vh;
@@ -280,7 +286,7 @@
         </div>
     </div>
 
-    <nav id="chat-panel-bar" class="navmenu navmenu-default navmenu-fixed-right offcanvas" role="navigation">
+    <nav id="chat-panel-bar" class="navmenu navmenu-inverse navmenu-fixed-right offcanvas" role="navigation">
         <div class="panel panel-primary" id="chat-panel">
 
             <div class="panel-heading" id="chat-panel-heading">Chat</div>
@@ -546,7 +552,7 @@
 
             secret_key = clientKey.computeSecret(server_publickey, 'hex', 'hex');
 
-            console.log('auth:exchange secret_key: ' + secret_key);
+            //console.log('auth:exchange secret_key: ' + secret_key);
 
             updateStatus(`Sending public key.`);
 
@@ -580,9 +586,8 @@
                 return;
             }
 
-            console.log('authenticated secret_key: ' + secret_key);
-
-            //TODO Sometimes this fails to decrypt the encrypted_key
+            //console.log('authenticated secret_key: ' + secret_key);
+            
             var passcode = decrypt(encrypted_passcode, secret_key);
             key = decrypt(encrypted_key, secret_key);
 
