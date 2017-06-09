@@ -10,6 +10,8 @@ var Moniker = require('moniker');
 var utils = require('./utils.js');
 var database = require('./database');
 const crypto = require('crypto');
+var sanitizeHtml = require('sanitize-html');
+var CryptoJS = require("crypto-js");
 
 const ROOMID_MIN_LENGTH = process.env.ROOMID_MIN_LENGTH || 8;
 const ROOM_PASSCODE_MIN_LENGTH = process.env.ROOM_PASSCODE_MIN_LENGTH || 6;
@@ -338,11 +340,31 @@ sockets.init = function(server)
             var username = socket.username;
             var msg = data.message;
 
+            // Decrypt message and sanitize
+            var room = _.findWhere(rooms, { 'roomId' : socket.roomId });
+            if (room)
+            {
+                var de_msg = CryptoJS.AES.decrypt(msg, room.key).toString(CryptoJS.enc.Utf8);
+                de_msg = sanitizeHtml(de_msg, 
+                {
+                    allowedTags: [ 'b', 'i', 'strong']
+                });
+                msg = CryptoJS.AES.encrypt(de_msg, room.key).toString();
+            }
+
+            io.in(socket.roomId).emit('chat:msg',
+                {
+                    "user": username,
+                    "message" : msg
+                });
+
+            /*
             socket.broadcast.to(socket.roomId).emit('chat:msg',
                 {
                     "user": username,
                     "message" : msg
                 });
+            */
         });
     });
 

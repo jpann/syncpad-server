@@ -110,8 +110,8 @@
     <script src="/js/human-readable-ids/index.js"></script>
     
     <script src="/js/notify.js"></script>
+    <script src="/js/sanitize-html.min.js"></script>
     
-
 </head>
 
 <body>
@@ -587,7 +587,7 @@
             }
 
             //console.log('authenticated secret_key: ' + secret_key);
-            
+
             var passcode = decrypt(encrypted_passcode, secret_key);
             key = decrypt(encrypted_key, secret_key);
 
@@ -721,7 +721,9 @@
             var text = decrypt(msg, key);
 
             appendChat(username, text);
-            notify(`Message from ${username}.`);
+
+            if (username !=$('#room-username-info').val())
+                notify(`Message from ${username}.`);
         });
 
         editor.on('text-change', function(delta, oldDelta, source) 
@@ -771,14 +773,18 @@
 
             socket.emit('chat:msg', { 'message' : encrypted_msg });
 
-            var username = $('#room-username-info').val();
-            appendChat(username, msg);
-
             $('#chat-panel-msg').val("");
         }
         function appendChat(username, msg)
         {
-            $('#chat-panel-messages').append($('<li class="list-group-item">').html($(`<h4 class="list-group-item-heading">${username}</h4><p class="list-group-item-text">${msg}</p>`)));
+            msg = sanitizeHtml(msg);
+
+            var text = 
+                `<p class="list-group-item-heading"><p style="font-size: 15px; color: #1ac6ff">${username}</p></p>
+                <p class="list-group-item-text" style="text-align: left; ">${msg} <span style="float: right; font-size: 9px; color: #B0B0B0">${moment().local().format("h:mm:ss a")}</span></p>`;
+
+            //$('#chat-panel-messages').append($('<li class="list-group-item">').html($(`<h4 class="list-group-item-heading">${username}</h4><p class="list-group-item-text">${msg}</p>`)));
+            $('#chat-panel-messages').append($('<li class="list-group-item">').html(text));
 
             $("#chat-panel-body").scrollTop($("#chat-panel-body")[0].scrollHeight);
         }
