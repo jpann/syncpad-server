@@ -349,6 +349,10 @@ sockets.init = function(server)
                 {
                     allowedTags: [ 'b', 'i', 'strong']
                 });
+
+                if (!de_msg)
+                    return;
+
                 msg = CryptoJS.AES.encrypt(de_msg, room.key).toString();
             }
 
