@@ -67,7 +67,7 @@ sockets.init = function(server)
         return false;
     }
 
-    function joinRoom(roomId, clientId, passcode)
+    function joinRoom(roomId, clientData, passcode)
     {
         if (checkIfRoomExists(roomId))
         {
@@ -75,7 +75,7 @@ sockets.init = function(server)
             if (verifyRoomPasscode(roomId, passcode))
             {
                 console.log(`${roomId} - Passcode verified`)
-                return room = addClientToRoom(roomId, clientId);
+                return room = addClientToRoom(roomId, clientData);
             }
             else
             {
@@ -90,7 +90,7 @@ sockets.init = function(server)
             // Create new room
             var room = createRoom(roomId, passcode);
 
-            addClientToRoom(room.roomId, clientId);
+            addClientToRoom(room.roomId, clientData);
 
             return room;
         }
@@ -131,8 +131,11 @@ sockets.init = function(server)
             rooms = _.without(rooms, _.findWhere(rooms, { 'roomId' : roomId }));
     }
 
-    function addClientToRoom(roomId, clientId)
+    function addClientToRoom(roomId, clientData)
     {
+        var clientId = clientData.clientId;
+        var username = clientData.username;
+
         var room = _.findWhere(rooms, { 'roomId' : roomId });
 
         if (room)
@@ -143,7 +146,7 @@ sockets.init = function(server)
             {
                 console.log(`${roomId} - Client '${clientId}' doesnt exist in room`)
 
-                room.clients.push({ 'clientId' : clientId  });
+                room.clients.push({ 'clientId' : clientId, 'username' : username });
             }
             else
             {
@@ -170,6 +173,21 @@ sockets.init = function(server)
             {
                 removeRoom(roomId);
             }
+        }
+    }
+
+    function usernameExistsInRoom(roomId, username)
+    {
+        var room = _.findWhere(rooms, { 'roomId' : roomId });
+
+        if (room)
+        {
+            var usernameExists = _.findWhere(room.clients, { 'username' : username }) || false;
+
+            if (usernameExists)
+                return true;
+            else
+                return false;
         }
     }
 
@@ -213,11 +231,14 @@ sockets.init = function(server)
             {
                 var passcode = data.passcode;
 
-                var room = joinRoom(roomId, clientId, passcode);
+                // Generate random username
+                var user = names.choose();
+
+                var room = joinRoom(roomId, { 'clientId' : clientId, 'username' : user }, passcode);
 
                 if (room)
                 {
-                    postAuthentication(socket, room);
+                    postAuthentication(socket, room, user);
                 }
                 else
                 {
@@ -361,27 +382,40 @@ sockets.init = function(server)
                     "user": username,
                     "message" : msg
                 });
+        });
 
-            /*
-            socket.broadcast.to(socket.roomId).emit('chat:msg',
-                {
-                    "user": username,
-                    "message" : msg
-                });
-            */
+        socket.on('chat:name change', function(data, ack)
+        {
+            var username = data.username;
+
+            username = sanitizeHtml(username, 
+            {
+                allowedTags: []
+            });
+
+            if (usernameExistsInRoom(socket.roomId, username))
+            {
+                ack("Username already exists", { 'username' : socket.username });
+            }
+            else
+            {
+                socket.username = username;
+
+                ack(null, { 'username' : username });
+            }
         });
     });
 
     //
     // Functions
-    function postAuthentication(socket, room)
+    function postAuthentication(socket, room, user)
     {
         var client_addr = socket.handshake.headers["x-real-ip"] || socket.request.connection.remoteAddress;
 
         var address = utils.getIpAddress(client_addr);
 
         // Generate random username
-        var user = names.choose();
+        //var user = names.choose();
         var roomId = socket.roomId;
 
         socket.username = user;
