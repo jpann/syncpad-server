@@ -191,8 +191,14 @@
                     <div class="modal-body">
                         <h6>Your Username:</h6>
                         <p>
-                            <input type="text" class="form-control room-username-info" id="room-username-info" readonly/>
+                            <div class="input-group">
+                                <input id="room-username-info" type="text" class="form-control room-username-info">
+                                <span class="input-group-btn">
+                                    <button id="room-username-change" class="btn btn-default" type="button">Change</button>
+                                </span>
+                            </div>
                         </p>
+
                         <h6>Room ID:</h6>
                         <p>
                             <input type="text" class="form-control room-id-info" id="room-id-info" readonly/>
@@ -778,7 +784,39 @@
             }
         });
 
+        //
         // Chat
+
+        // Change username
+        $('#room-username-change').click(function()
+        {
+            var username = $('#room-username-info').val();
+
+            if (username)
+            {
+                socket.emit('chat:name change', 
+                { 'username' : username }, 
+                function(err, data)
+                {
+                    if (err)
+                    {
+                        console.log("username already exists in room.");
+
+                        // Reset modal value
+                        $('#room-username-info').val(data.username);
+                    }
+                    else
+                    {
+                        $('#room-username-info').val(data.username);
+
+                        $('title').text(`${data.username}@${roomId} - syncpad editor`);
+                        
+                    }
+                    
+                });
+            }
+        });
+
         $('#chat-panel-send').click(function()
         {   
             sendMessage();
