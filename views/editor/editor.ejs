@@ -45,20 +45,22 @@
 
         #chat-panel {
             margin-bottom: 0;
-            height: 90vh;
-            max-height: 90vh;
+            height: 50vh;
+            max-height: 50vh;
             position: relative;
             margin: 0 !important;
             padding: 0 !important;
+            border-color: #f5f5f5;
         }
 
         #chat-panel-body {
             overflow: auto;
             position: absolute;
-            top: 55px;
+            top: 0px;
             bottom: 55px;
             left: 0;
             right: 0;
+            padding: 5px;
         }
 
         #chat-panel-footer {
@@ -66,19 +68,6 @@
             right: 0;
             bottom: 0;
             left: 0;
-        }
-
-        #chat-panel-heading {
-            background-image: none;
-            background-color: black;
-            color: white;
-        }
-
-        #chat-panel-bar {
-            top: 6%;
-            height: 90vh;
-            max-height: 90vh;
-            width: 20%;
         }
     </style>
 
@@ -122,7 +111,7 @@
                 <button id="debug-info-button" class="glyphicon glyphicon-eye-open" data-toggle="tooltip" data-placement="top" title="Debug Info"></button>
                 <button id="info-button" class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="top" title="Editor Info"></button>
                 <button id="users-button" class="glyphicon glyphicon-cloud" data-toggle="tooltip" data-placement="top" title="Users"></button>
-                <button id="chat-button" class="glyphicon glyphicon-user" data-toggle="offcanvas" data-target="#chat-panel-bar" title="Open Chat"></button>
+                <button id="chat-button" class="glyphicon glyphicon-user" data-toggle="tooltip" data-placement="top" title="Open Chat"></button>
 
                 <select class="ql-size">
                     <option value="huge"></option>
@@ -138,7 +127,7 @@
 
         </div>
 
-        <div class="modal fade" id="settings-modal" tabindex="-1" role="dialog">
+        <div class="modal fade" id="settings-modal" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -286,9 +275,38 @@
         </div>
     </div>
 
+    <div class="modal fade" id="chat-modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="chat-title">Chat</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="panel panel-primary" id="chat-panel">
+                            <div class="panel-body" id="chat-panel-body">
+                                <ul class="list-group" id="chat-panel-messages">          
+                                </ul>
+                            </div>
+                            <div class="panel-footer" id="chat-panel-footer">
+                                <div class="input-group">
+                                    <input id="chat-panel-msg" type="text" class="form-control" placeholder="Send message">
+                                    <span class="input-group-btn">
+                                        <button id="chat-panel-send" class="btn btn-default" type="button">Send</button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!--
     <nav id="chat-panel-bar" class="navmenu navmenu-inverse navmenu-fixed-right offcanvas" role="navigation">
         <div class="panel panel-primary" id="chat-panel">
-
             <div class="panel-heading" id="chat-panel-heading">Chat</div>
             <div class="panel-body" id="chat-panel-body">
                 <ul class="list-group" id="chat-panel-messages">          
@@ -304,6 +322,7 @@
             </div>
         </div>
     </nav>
+    -->
 </body>
 <input type="hidden" id="passcode" value="">
 <input type="hidden" id="roomId" value="<%= roomId %>">
@@ -335,6 +354,15 @@
         });
 
         $('#share-url').val(window.location.href);
+
+        /*
+        $('#settings-modal').modal(
+        {
+            backdrop: 'static',
+            keyboard: false
+        });
+        */
+
         $('#settings-modal').modal('show');
 
         $('#generate-key').popover().click(function () 
@@ -342,6 +370,11 @@
             setTimeout(function () {
                 $('#generate-key').popover('hide');
             }, 2000);
+        });
+
+        $('#chat-button').click(function()
+        {
+            $('#chat-modal').modal('toggle');
         });
 
         $('#users-button').click(function()
@@ -780,7 +813,6 @@
                 `<p class="list-group-item-heading"><p style="font-size: 15px; color: #1ac6ff">${username}</p></p>
                 <p class="list-group-item-text" style="text-align: left; ">${msg} <span style="float: right; font-size: 9px; color: #B0B0B0">${moment().local().format("h:mm:ss a")}</span></p>`;
 
-            //$('#chat-panel-messages').append($('<li class="list-group-item">').html($(`<h4 class="list-group-item-heading">${username}</h4><p class="list-group-item-text">${msg}</p>`)));
             $('#chat-panel-messages').append($('<li class="list-group-item">').html(text));
 
             $("#chat-panel-body").scrollTop($("#chat-panel-body")[0].scrollHeight);
