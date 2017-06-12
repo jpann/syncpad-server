@@ -282,53 +282,33 @@
     </div>
 
     <div class="modal fade" id="chat-modal" tabindex="-1" role="dialog">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title" id="chat-title">Chat</h4>
-                    </div>
-                    <div class="modal-body">
-                        <div class="panel panel-primary" id="chat-panel">
-                            <div class="panel-body" id="chat-panel-body">
-                                <ul class="list-group" id="chat-panel-messages">          
-                                </ul>
-                            </div>
-                            <div class="panel-footer" id="chat-panel-footer">
-                                <div class="input-group">
-                                    <input id="chat-panel-msg" type="text" class="form-control" placeholder="Send message">
-                                    <span class="input-group-btn">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="chat-title">Chat</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="panel panel-primary" id="chat-panel">
+                        <div class="panel-body" id="chat-panel-body">
+                            <ul class="list-group" id="chat-panel-messages">
+                            </ul>
+                        </div>
+                        <div class="panel-footer" id="chat-panel-footer">
+                            <div class="input-group">
+                                <input id="chat-panel-msg" type="text" class="form-control" placeholder="Send message">
+                                <span class="input-group-btn">
                                         <button id="chat-panel-send" class="btn btn-default" type="button">Send</button>
                                     </span>
-                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
-
-    <!--
-    <nav id="chat-panel-bar" class="navmenu navmenu-inverse navmenu-fixed-right offcanvas" role="navigation">
-        <div class="panel panel-primary" id="chat-panel">
-            <div class="panel-heading" id="chat-panel-heading">Chat</div>
-            <div class="panel-body" id="chat-panel-body">
-                <ul class="list-group" id="chat-panel-messages">          
-                </ul>
-            </div>
-            <div class="panel-footer" id="chat-panel-footer">
-                <div class="input-group">
-                    <input id="chat-panel-msg" type="text" class="form-control" placeholder="Send message">
-                    <span class="input-group-btn">
-                        <button id="chat-panel-send" class="btn btn-default" type="button">Send</button>
-                    </span>
-                </div>
-            </div>
-        </div>
-    </nav>
-    -->
+    </div>
 </body>
 <input type="hidden" id="passcode" value="">
 <input type="hidden" id="roomId" value="<%= roomId %>">
@@ -360,14 +340,6 @@
         });
 
         $('#share-url').val(window.location.href);
-
-        /*
-        $('#settings-modal').modal(
-        {
-            backdrop: 'static',
-            keyboard: false
-        });
-        */
 
         $('#settings-modal').modal('show');
 
@@ -843,6 +815,7 @@
 
             $('#chat-panel-msg').val("");
         }
+        
         function appendChat(username, msg)
         {
             msg = sanitizeHtml(msg);
