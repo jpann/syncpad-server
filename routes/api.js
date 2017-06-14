@@ -122,61 +122,7 @@ router.get('/listClients',
             res.status(500).json({ "status": "error", "message": err.message });
         }
     });
-
-router.get('/users/:roomId',
-    //require('connect-ensure-login').ensureLoggedIn(),
-    function(req, res, next)
-    {
-        try
-        {
-            var roomId = req.params.roomId;
-            
-            if (!roomId)
-            {
-                res.status(500).json({ "status": "error", "message": "Invalid roomId" });
-            }
-
-            var io = req.app.get('socketio');
-
-            // get list of clients
-            var sockets = Object.keys(io.sockets.adapter.rooms[roomId].sockets);
-
-            var clients = [];
-
-            for (var i = 0; i < sockets.length; i++)
-            {
-                var socketId = sockets[i];
-                var socket = io.sockets.connected[socketId];
-
-                if (socket)
-                {
-                    var connectedTime = socket.client.connectedTime;
-                    var lastUpdateTime = socket.client.lastUpdateTime;
-
-                    var client_addr = socket.handshake.headers["x-real-ip"] || socket.request.connection.remoteAddress;
-
-                    var remoteAddress = utils.getIpAddress(client_addr); 
-
-                    clients.push(
-                    {
-                        "roomId" : socket.roomId,
-                        "username" : socket.username,
-                        "connectedTime" : connectedTime,
-                        "lastUpdateTime" : lastUpdateTime,
-                    });
-                }
-            }
-
-            res.json(clients);
-        }
-        catch (err)
-        {
-            console.log(err);
-
-            res.status(500).json({ "status": "error", "message": err.message });
-        }
-    });
-
+    
 module.exports = router;
 
 function checkRole(role)
