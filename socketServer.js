@@ -1,6 +1,5 @@
 var moment = require('moment');
 var async = require('async');
-var moment = require('moment');
 var _ = require('underscore');
 var shortid = require('shortid');
 var CryptoJS = require("crypto-js");
