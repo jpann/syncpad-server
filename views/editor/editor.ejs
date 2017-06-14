@@ -354,53 +354,6 @@
             $('#chat-modal').modal('toggle');
         });
 
-        $('#users-button').click(function()
-        {
-            var roomId = $('#roomId').val();
-
-            $.ajax(
-            {
-                url: '/api/users/' + roomId,
-                type: "GET",
-                xhrFields: {
-                    withCredentials: true
-                },
-                dataType: "json",
-                contentType: "application/json",
-                cache: false,
-                timeout: 5000,
-                complete: function() 
-                {
-                },
-
-                success: function(data) 
-                {
-                    $('#user-table tbody').empty();
-
-                    $.each(data, function(id)
-                    {
-                        var client = data[id];
-
-                        $('#user-table tbody').append(`
-                        <tr>
-                            <td>${client.username}</td>
-                            <td>${moment(client.connectedTime).local().fromNow()}</td>
-                            <td>${moment(client.lastUpdateTime).local().fromNow()}</td>
-                        </tr>
-                        `);
-                    });
-                },
-
-                error: function(jqXHR, textStatus, err)
-                {
-                    console.warn(jqXHR.responseJSON.message)
-                    console.warn('text status '+textStatus+', err '+err)
-                },
-            });
-
-             $('#users-modal').modal('toggle');
-        });
-
         $('#info-button').click(function()
         {
             $('#info-modal').modal('toggle');
@@ -748,6 +701,29 @@
             {
                 socket.emit('text:typing');
             }
+        });
+
+        $('#users-button').click(function()
+        {
+            socket.emit('users:list', null, function(clients)
+            {
+                $('#user-table tbody').empty();
+
+                $.each(clients, function(id)
+                {
+                    var client = clients[id];
+
+                    $('#user-table tbody').append(`
+                    <tr>
+                        <td>${client.username}</td>
+                        <td>${moment(client.connectedTime).local().fromNow()}</td>
+                        <td>${moment(client.lastUpdateTime).local().fromNow()}</td>
+                    </tr>
+                    `);
+                });
+
+                $('#users-modal').modal('toggle');
+            });  
         });
 
         //
