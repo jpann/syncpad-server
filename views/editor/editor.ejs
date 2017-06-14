@@ -310,7 +310,6 @@
         </div>
     </div>
 </body>
-<input type="hidden" id="passcode" value="">
 <input type="hidden" id="roomId" value="<%= roomId %>">
 
 <script>
@@ -404,9 +403,6 @@
 
         $('#info-button').click(function()
         {
-            //$('#room-id-info').val($('#roomId').val());
-            //$('#room-passcode-info').val($('#passcode').val());
-
             $('#info-modal').modal('toggle');
         });
 
@@ -596,8 +592,6 @@
 
                 return;
             }
-
-            //console.log('authenticated secret_key: ' + secret_key);
 
             var passcode = decrypt(encrypted_passcode, secret_key);
             key = decrypt(encrypted_key, secret_key);
