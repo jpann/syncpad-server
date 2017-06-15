@@ -6,14 +6,12 @@ const PORT = process.env.PORT || 3000;
 const USE_SSL = process.env.USE_SSL || 'N';
 const SSL_KEY = process.env.SSL_KEY || './certs/syncpad.pem';
 const SSL_CERT = process.env.SSL_CERT || './certs/syncpad.crt';
-
-var sockets = require('../socketServer')
-var app = require('../app');
-
-var debug = require('debug')('test-server:server');
-var http = require('http');
-var https = require('https');
-var fs = require('fs');
+const sockets = require('../socketServer')
+const app = require('../app');
+const debug = require('debug')('syncpad-server:server');
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
 
 if (USE_SSL == 'Y')
 {
@@ -93,6 +91,7 @@ function onListening()
     var bind = typeof addr === 'string'
         ? 'pipe ' + addr
         : 'port ' + addr.port;
+        
     debug('Listening on ' + bind);
     console.log('Listening on *:' + addr.port);
 }

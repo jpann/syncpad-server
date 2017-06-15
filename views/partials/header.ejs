@@ -15,11 +15,6 @@
         <li><a href="/admin/profile">My Profile</a></li>
         <li><a href="/editor">Create Editor</a></li>
         <li><a href="/e">Create Editor (Short ID)</a></li>
-
-        <% if (user.role == 'admin') { %>
-          <li><a href="/admin/clients">Client List</a></li>
-          <% } %>
-
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <% if (user) { %>

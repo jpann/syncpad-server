@@ -1,29 +1,12 @@
-var express = require('express');
-var passport = require('passport');
-var moment = require('moment');
-var _ = require('underscore');
-var router = express.Router();
-
-var utils = require('./../utils.js');
-var routerUtil = require('./routeUtil');
-var database = require('./../database');
+const express = require('express');
+const passport = require('passport');
+const moment = require('moment');
+const _ = require('underscore');
+const router = express.Router();
+const utils = require('./../utils.js');
+const database = require('./../database');
 
 const MIN_PASSWORD_LENGTH = process.env.MIN_PASSWORD_LENGTH || 10;
-
-router.post('/login',
-    passport.authenticate('local'),
-    function(req, res) 
-    {
-        var sid = req.sessionID;
-
-        res.json({ 'sid' : sid });
-    });
-
-router.get('/logout',
-    function(req, res)
-    {
-        req.logout();
-    });
 
 router.post('/profile/update',
     require('connect-ensure-login').ensureLoggedIn(),
@@ -74,7 +57,7 @@ router.post('/profile/update',
 
 router.get('/listClients',
     require('connect-ensure-login').ensureLoggedIn(),
-    checkRole('admin'),
+    utils.checkRole('admin'),
     function(req, res, next)
     {
         try
@@ -124,14 +107,3 @@ router.get('/listClients',
     });
     
 module.exports = router;
-
-function checkRole(role)
-{
-    return function(req, res, next)
-    {
-        if (req.user && req.user.role == role)
-            next();
-        else
-            res.send(401, 'Unauthorized');
-    };
-};

@@ -1,7 +1,7 @@
-var gulp = require('gulp');
-var babel = require('gulp-babel')
-var uglify = require('gulp-uglify');
-var pump = require('pump');
+const gulp = require('gulp');
+const babel = require('gulp-babel')
+const uglify = require('gulp-uglify');
+const pump = require('pump');
 
 gulp.task('watch', function()
 {

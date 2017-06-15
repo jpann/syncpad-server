@@ -1,13 +1,11 @@
-var express = require('express');
-var CryptoJS = require("crypto-js");
-var shortid = require('shortid');
-var hri = require('human-readable-ids').hri;
-var _ = require('underscore');
+const express = require('express');
+const CryptoJS = require("crypto-js");
+const shortid = require('shortid');
+const hri = require('human-readable-ids').hri;
+const _ = require('underscore');
+const utils = require('./../utils.js');
 
 var router = express.Router();
-
-var utils = require('./../utils.js');
-var routerUtil = require('./routeUtil');
 
 const ROOMID_MIN_LENGTH = process.env.ROOMID_MIN_LENGTH || 8;
 
