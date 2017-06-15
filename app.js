@@ -1,25 +1,22 @@
-var express = require('express');
-var passport = require('passport');
-var Strategy = require('passport-local').Strategy;
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
-var moment = require('moment');
-var flash = require('connect-flash');
-var fs = require('fs');
-var rfs = require('rotating-file-stream');
-var expressValidator = require('express-validator');
-
-var database = require('./database');
+const express = require('express');
+const passport = require('passport');
+const Strategy = require('passport-local').Strategy;
+const path = require('path');
+const logger = require('morgan');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+const flash = require('connect-flash');
+const fs = require('fs');
+const rfs = require('rotating-file-stream');
+const expressValidator = require('express-validator');
+const database = require('./database');
 
 const SESSION_SECRET = process.env.SESSION_SECRET || 'keyboard cat';
 const MIN_PASSWORD_LENGTH = process.env.MIN_PASSWORD_LENGTH || 10;
 
-var index = require('./routes/index');
-var api = require('./routes/api');
-var editor = require('./routes/editor');
+const admin = require('./routes/admin');
+const api = require('./routes/api');
+const editor = require('./routes/editor');
 
 var app = express();
 
@@ -142,7 +139,7 @@ passport.deserializeUser(function(id, cb)
     });
 });
 
-app.use('/admin', index);
+app.use('/admin', admin);
 app.use('/api', api);
 app.use('/:t(e|editor)', editor);
 app.get('/', function(req, res) 

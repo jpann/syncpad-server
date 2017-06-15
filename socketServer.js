@@ -1,15 +1,13 @@
-var moment = require('moment');
-var _ = require('underscore');
-var shortid = require('shortid');
-var CryptoJS = require("crypto-js");
-var passwordHash = require('password-hash');
-var Moniker = require('moniker');
-
-var utils = require('./utils.js');
-var database = require('./database');
+const moment = require('moment');
+const _ = require('underscore');
+const shortid = require('shortid');
+const CryptoJS = require("crypto-js");
+const passwordHash = require('password-hash');
+const Moniker = require('moniker');
+const utils = require('./utils.js');
+const database = require('./database');
 const crypto = require('crypto');
-var sanitizeHtml = require('sanitize-html');
-var CryptoJS = require("crypto-js");
+const sanitizeHtml = require('sanitize-html');
 
 const ROOMID_MIN_LENGTH = process.env.ROOMID_MIN_LENGTH || 8;
 const ROOM_PASSCODE_MIN_LENGTH = process.env.ROOM_PASSCODE_MIN_LENGTH || 6;
@@ -22,7 +20,7 @@ sockets.init = function(server)
 
     let rooms = [];
 
-    var names = Moniker.generator([Moniker.adjective, 'names.txt'],
+    var names = Moniker.generator([Moniker.adjective, 'data/names.txt'],
     {
         'glue' : '_'
     });

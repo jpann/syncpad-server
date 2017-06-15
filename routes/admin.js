@@ -1,17 +1,23 @@
-var express = require('express');
-var passport = require('passport');
-var flash = require('connect-flash');
-var moment = require('moment');
-
-var router = express.Router();
-var database = require('./../database');
-var utils = require('./../utils.js');
+const express = require('express');
+const passport = require('passport');
+const flash = require('connect-flash');
+const moment = require('moment');
+const router = express.Router();
+const database = require('./../database');
+const utils = require('./../utils.js');
 
 router.get('/',
     loggedIn,
     function(req, res, next)
     {
-        res.render('home', { "user": req.user });
+        try
+        {
+            res.render('home', { user: req.user });
+        }
+        catch (err)
+        {
+            next(err);
+        }
     });
 
 router.get('/login',
@@ -48,33 +54,7 @@ router.get('/profile',
         });
     });
 
-router.get('/clients',
-    require('connect-ensure-login').ensureLoggedIn(),
-    checkRole('admin'),
-    function(req, res, next)
-    {
-        try
-        {
-            res.render('clientsList', { user: req.user });
-        }
-        catch (err)
-        {
-            next(err);
-        }
-    });
-
 module.exports = router;
-
-function checkRole(role)
-{
-    return function(req, res, next)
-    {
-        if (req.user && req.user.role == role)
-            next();
-        else
-            res.send(401, 'Unauthorized');
-    };
-};
 
 function loggedIn(req, res, next) 
 {

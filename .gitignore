@@ -62,7 +62,6 @@ certs/*
 !certs/.gitkeep
 
 db
-logs
 
 .env
 .vscode

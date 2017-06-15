@@ -1,115 +1,210 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8">
+
+<head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>Home</title>
+    <title>Connected Users</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font: 10px Helvetica, Arial; }
-        .container 
-        { 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font: 10px Helvetica, Arial;
+        }
+
+        .container {
             margin: 5px;
-            padding: 5px; 
+            padding: 5px;
+            height: 100%;
         }
 
-		.input-group
-        {
-            margin: 0px;
-            padding: 0px;
+        .alert {
+            display: none;
         }
-
-        .form-horizontal
-        {
-            margin: 0px;
-            padding: 0px;
-        }
-
-        #user-list { list-style-type: none; margin: 0; padding: 0; }
-        #user-list li { padding: 5px 10px; }
-        #user-list li:nth-child(odd) { background: #eee; }
     </style>
 
     <script src="/js/jquery-3.2.1.min.js"></script>
-    
+
     <script src="/js/jquery.validate.js"></script>
     <script src="/js/additional-methods.js"></script>
     <script src="/js/bootstrap.min.js"></script>
-    
+    <script src="/js/moment.js"></script>
+
     <link rel="stylesheet" href="/css/bootstrap.min.css">
-  </head>
-	<body>
-        <%- include('partials/header', {user: user}) %>
 
-		<div class="container">
-			<% if (user) { %>
-			<p>Hello, <%= user.username %>. View your <a href="/profile">profile</a> is where you can change your password. See below for a quick start guide on how to use syncpad!</p><br><br>
-			<% } %>
+</head>
 
-            <h2>Quick Start</h2>
-            <h3>Online Editor</h3>
-            You don't have to use the Windows client in order to use syncpad, while the Windows client lets you use syncpad without having to keep a browser window open, you can easily share your editor
-            with another user by just creating a new editor room with the online editor and then sharing the url and the room password that you set.<br/>
-            <br/>
-            <h4>Creating a new Online Editor</h4>
-            In order to create a new Online Editor, while logged in, you navigate to <a href="/editor">https://syncpad.ikonzeh.org/editor</a> (or click the <a href="/editor">'Create Editor'</a> button above) 
-            which will create a new editor room for you using a random ID.
-            <br/><br/>
-            When you go to the 'Create Editor' screen, you will be prompted to set a new password for the editor room you are creating. This is the password that other users must enter to join 
-            your editor room, so remember it.
-            <br/>
-            Once you create the new editor room, you will be dropped into the editor window where you can start sharing text.
-            <br/><br/>
-            <b>Note:</b> You can create a room by any ID by just going to <a href="#">https://syncpad.ikonzeh.org/editor/YOUR_ROOM_ID_HERE</a> where <i>YOUR_ROOM_ID_HERE</i> is a unique value and not used in an existing room.
-            <br/><br/>
-            <h4>Joining an existing Online Editor</h4>
-            You can join an existing room that another user created (either with the Windows client or online) by just going to the editor room url, which looks like the following, 
-            with 'ThisIsATestRoom' being the room ID: <a href="/editor/ThisIsATestRoom">https://syncpad.ikonzeh.org/editor/ThisIsATestroom</a>.
-            <br/><br/>
-            When you join an existing room, you will be prompted to enter the password required to join the room. If you do not know the password, you will be unable to join the room.
-            <br/><br/>
+<body>
+    <%- include('partials/header', {user: user}) %>
 
-            <h3>Windows Client</h3>
-            <h4>Install Client</h4>
-            You already have an account, otherwise you wouldn't be able to see this page, so we'll skip that part.<br/><br/>
-            You have to download the syncpad-client and install it. You can download it <a href="https://ikonzeh.org/projects/syncpad/releases/x64/syncpad-0.4.2-setup.exe">here (x64)</a>.<br/>
-            Once you download and install syncpad-client, you will have a shortcut on your desktop.
+        <div class="container">
+            <div class="panel panel-default">
+                <div class="panel-heading">Connected Users</div>
+                <div class="panel-body" style="overflow-y: scroll; height: 90%">
 
-            <br/><br/>
-            <h4>Executing</h4>
-            Execute the syncpad shortcut that was installed on your desktop.
-
-            <br/><br/>
-            <h4>Logging in</h4>
-            When you execute syncpad, you will be greeted with a login window where you set the syncpad server url, your login information, the room ID, and the password for the room. 
-            
-            <br/><br/>
-            If the room does not exist, a room with that ID will be created, the password to join that room will be set to the password you entered and a random encryption key will be generated. 
-            <br/><br/>
-            If a room exists with that ID, you will join that room with the password you entered. If the password is correct, you will be automatically provided the encryption key and you can then use the editor in that room.
-            <br/><br/>
-            
-            
-            <br/><br/>
-            The login window will look like this:<br/><br/>
-            <img src="/images/syncpad-login.png" />
-            <br/><br/>
-
-            <h4>Set the following information:</h4><br/>
-            <div class="list-group">
-                <a href="#" class="list-group-item">Server: https://syncpad.ikonzeh.org</a>
-                <a href="#" class="list-group-item">User: [your user]</a>
-                <a href="#" class="list-group-item">Password: [your password]</a>
-                <a href="#" class="list-group-item">Editor Room: You can click 'Generate' to generate a random room ID or you can enter your own room ID (the length has to be at least 10 characters).</a>
-                <a href="#" class="list-group-item">Room Password: The password used to join a room.</a>
+                    <table id="user-table" class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th class="col-md-1"><small>Username</small></th>
+                                <th class="col-md-2"><small>Room ID</small></th>
+                                <th class="col-md-1"><small>Namespace</small></th>
+                                <th class="col-md-2"><small>Time Connected</small></th>
+                                <th class="col-md-4"><small>Remote Address</small></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <br/><br/>
-            <br/><br/>
-            <br/><br/>
-		</div>
+
+            <div class="well well-sm">
+                <br/>
+                <div class="alert alert-danger alert-dismissable" id="alert-error">
+                    <button type="button" class="close" aria-hidden="true">&times;</button>
+                    <p id="alert-error-txt"></p>
+                </div>
+
+                <div class="alert alert-success alert-dismissable" id="alert-success">
+                    <button type="button" class="close" aria-hidden="true">&times;</button>
+                    <p id="alert-success-txt"></p>
+                </div>
+            </div>
+            <script>
+                $(function()
+                {
+                    $('.alert .close').on('click', function(e) 
+                    {
+                        $(this).parent().hide();
+                    });
+
+                    function successAlert(msg)
+                    {
+                        $('#alert-success-txt').text(msg);
+                        $('#alert-success').show();
+
+                        $("#alert-success").fadeTo(2000, 500).slideUp(500, function()
+                        {
+                            $("#alert-success").slideUp(500);
+                        });
+                    }
+
+                    function errorAlert(msg)
+                    {
+                        $('#alert-error-txt').text(msg);
+                        $('#alert-error').show();
+
+                        $("#alert-error").fadeTo(2000, 500).slideUp(500, function()
+                        {
+                            $("#alert-error").slideUp(500);
+                        });
+                    }
+
+                    loadClients();
+
+                    $.ajaxSetup({
+                        xhrFields: {
+                            withCredentials: true
+                        }
+                    });
+
+                    function loadClients()
+                    {
+                        $.ajax(
+                            {
+                                url: '/api/listClients',
+                                type: "GET",
+                                xhrFields: {
+                                    withCredentials: true
+                                },
+                                dataType: "json",
+                                contentType: "application/json",
+                                cache: false,
+                                timeout: 5000,
+                                complete: function() 
+                                {
+                                },
+
+                                success: function(data) 
+                                {
+                                    console.log(data);
+                                    loadClientTable(data);
+                                },
+
+                                error: function(jqXHR, textStatus, err)
+                                {
+                                    console.warn(jqXHR.responseJSON.message)
+                                    console.warn('text status ' + textStatus + ', err ' + err)
+
+                                    errorAlert(jqXHR.responseJSON.message);
+                                },
+                            });
+                    }
+
+                    function loadClientTable(clients)
+                    {
+                        $('#user-table tbody').empty();
+
+                        $.each(clients, function(id)
+                        {
+                            var client = clients[id];
+
+                            console.log("-> " + moment(client.connectedTime).local().format("YYYY MM DD, h:mm:ss a"));
+
+                            $('#user-table tbody').append(`
+            <tr>
+                <td><a href="#">${client.username}</a></td>
+                <td><a href="/editor/${client.roomId}" target="_blank">${client.roomId}</a></td>
+                <td>${client.namespace}</td>
+                <td>${moment(client.connectedTime).local().fromNow()}</td>
+                <td>${client.remoteAddress}</td>
+            </tr>
+            `);
+                        });
+                    }
+
+                    function listClients()
+                    {
+                        $.ajax(
+                            {
+                                url: '/api/listClients',
+                                type: "POST",
+                                xhrFields: {
+                                    withCredentials: true
+                                },
+                                dataType: "json",
+                                data: "",
+                                contentType: "application/json",
+                                cache: false,
+                                timeout: 5000,
+                                complete: function() 
+                                {
+
+                                },
+                                success: function(data) 
+                                {
+                                    successAlert("Clients Loaded");
+
+                                    loadClients();
+                                },
+                                error: function(jqXHR, textStatus, err)
+                                {
+                                    console.warn(jqXHR.responseJSON)
+                                    console.warn('text status ' + textStatus + ', err ' + err)
+
+                                    errorAlert(jqXHR.responseJSON.message);
+                                },
+                            });
+                    }
+                });
+
+            </script>
+        </div>
+
         <%- include('partials/footer', {user: user}) %>
-	</body>
+</body>
+
 </html>
-
-
