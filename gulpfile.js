@@ -5,7 +5,7 @@ var pump = require('pump');
 
 gulp.task('watch', function()
 {
-    gulp.watch('client/**/**/*.js', ['uglify']);
+    gulp.watch('client/js/**/*.js', ['uglify']);
 });
 
 gulp.task('uglify', function(cb)
