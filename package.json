@@ -1,6 +1,6 @@
 {
   "name": "syncpad-server",
-  "description": "Node.js server for syncpad-client.",
+  "description": "Server for a somewhat collaborative web based text editor.",
   "version": "0.2.5",
   "private": true,
   "scripts": {
@@ -9,6 +9,7 @@
     "prod" : "gulp uglify && node ./bin/www"
   },
   "author": "jpann",
+  "license": "MIT",
   "dependencies": {
     "async": "^2.4.1",
     "body-parser": "^1.17.2",
