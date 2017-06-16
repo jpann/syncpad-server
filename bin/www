@@ -8,7 +8,6 @@ const SSL_KEY = process.env.SSL_KEY || './certs/syncpad.pem';
 const SSL_CERT = process.env.SSL_CERT || './certs/syncpad.crt';
 const sockets = require('../socketServer')
 const app = require('../app');
-const debug = require('debug')('syncpad-server:server');
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
@@ -92,6 +91,5 @@ function onListening()
         ? 'pipe ' + addr
         : 'port ' + addr.port;
         
-    debug('Listening on ' + bind);
     console.log('Listening on *:' + addr.port);
 }
