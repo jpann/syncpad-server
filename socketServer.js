@@ -65,6 +65,9 @@ sockets.init = function(server)
 
     function joinRoom(roomId, clientData, passcode)
     {
+        if (!roomId || !passcode)
+            return null;
+
         if (checkIfRoomExists(roomId))
         {
             console.log(`${roomId} - Room exists`)
