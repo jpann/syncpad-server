@@ -325,6 +325,8 @@ function connect(roomId, passcode)
         var d_text = decrypt(m_text, key);
         var data = JSON.parse(d_text);
 
+        console.log("text => " + JSON.stringify(data));
+
         editor.updateContents(data, "silent");
     });
 
