@@ -5,8 +5,8 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "dev" : "set DEBUG=syncpad-server:* & node ./bin/www",
-    "prod" : "gulp uglify && node ./bin/www"
+    "dev": "set DEBUG=syncpad-server:* & node ./bin/www",
+    "prod": "gulp uglify && node ./bin/www"
   },
   "author": "jpann",
   "license": "MIT",
@@ -49,6 +49,7 @@
     "gulp-flatten": "^0.3.1",
     "gulp-minify-css": "^1.2.4",
     "gulp-rename": "^1.2.2",
+    "gulp-uglify": "^3.0.0",
     "pump": "^1.0.2"
   }
 }
