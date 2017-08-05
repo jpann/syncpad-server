@@ -83,7 +83,7 @@ sockets.init = function(server)
         }
         else
         {
-            if (passcode.length < ROOM_PASSCODE_MIN_LENGTH)
+            if (!passcode || passcode.length < ROOM_PASSCODE_MIN_LENGTH)
                 return null;
 
             // Create new room
