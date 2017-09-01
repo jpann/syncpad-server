@@ -62,7 +62,7 @@
 					</div>
 				</div>
 
-                <% if (errors.length > 0) { %> 
+                <% if (errors && errors.length > 0) { %> 
                 <div class="alert alert-danger alert-block  alert-dismissable" id="alert-error">
                     <button type="button" class="close" aria-hidden="true">&times;</button>
                     <p>
@@ -71,6 +71,17 @@
                     <% } %>
                     </p>
                 </div>
+                <% }%>
+
+                <% if (success && success.length > 0) { %> 
+                    <div class="alert alert-success alert-block  alert-dismissable" id="alert-success">
+                        <button type="button" class="close" aria-hidden="true">&times;</button>
+                        <p>
+                        <% for(var i = 0; i < success.length; i++) { %>
+                            <%= success[i] %></br>
+                        <% } %>
+                        </p>
+                    </div>
                 <% }%>
 			</form>
 		</div>
