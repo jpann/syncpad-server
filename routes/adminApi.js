@@ -60,7 +60,6 @@ router.post('/update-profile',
 
 router.get('/list-clients',
     require('connect-ensure-login').ensureLoggedIn(),
-    utils.checkRole('admin'),
     function(req, res, next)
     {
         try
