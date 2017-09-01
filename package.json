@@ -1,7 +1,7 @@
 {
   "name": "syncpad-server",
-  "description": "Server for a somewhat collaborative web based text editor.",
-  "version": "0.2.5",
+  "description": "Server for a somewhat collaborative web-based text editor that uses encryption.",
+  "version": "0.2.6",
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
