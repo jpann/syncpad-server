@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Setup - syncpad-server</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font: 10px Helvetica, Arial;
+        }
+
+        .container {
+            margin: 5px;
+            padding: 5px;
+        }
+
+        .input-group {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        .form-horizontal {
+            margin: 0px;
+            padding: 0px;
+        }
+    </style>
+
+    <script src="/js/jquery-3.2.1.min.js"></script>
+
+    <script src="/js/jquery.validate.js"></script>
+    <script src="/js/additional-methods.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+</head>
+
+<body>
+    <%- include('../partials/header', { user : undefined }) %>
+
+        <div class="container">
+            <div class="panel panel-default">
+                <div class="panel-heading">Setup new admin user</div>
+                <div class="panel-body">
+                        <form class="form-horizontal" id="setup-form" action="/admin/setup" method="post">
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+                                <input name="username" id="user" type="text" placeholder="Username" class="form-control" value="">
+                            </div><br/>
+            
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+                                <input name="password" id="password" type="password" placeholder="Password" class="form-control" value="">
+                            </div><br/>
+            
+                            <div class="form-group">
+                                <div class="col-sm-offset-0 col-sm-12">
+                                    <button id="setup" type="submit" class="btn btn-default">Setup</button>
+                                </div>
+                            </div>
+                        </form>
+                </div>
+            </div>
+
+            <% if (errors.length > 0) { %> 
+                <div class="alert alert-danger alert-block  alert-dismissable" id="alert-error">
+                    <button type="button" class="close" aria-hidden="true">&times;</button>
+                    <p>
+                    <% for(var i = 0; i < errors.length; i++) { %>
+                        <%= errors[i] %></br>
+                    <% } %>
+                    </p>
+                </div>
+            <% }%>
+        </div>
+
+        <%- include('../partials/footer') %>
+</body>
+
+</html>

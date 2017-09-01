@@ -15,7 +15,7 @@ const SESSION_SECRET = process.env.SESSION_SECRET || 'keyboard cat';
 const MIN_PASSWORD_LENGTH = process.env.MIN_PASSWORD_LENGTH || 10;
 
 const admin = require('./routes/admin');
-const api = require('./routes/api');
+const adminApi = require('./routes/adminApi');
 const editor = require('./routes/editor');
 
 var app = express();
@@ -99,7 +99,7 @@ passport.use(new Strategy(
     },
     function(req, username, password, cb)
     {
-        database.validateUser(username, password, function(err, user)
+        database.validateAdminUser(username, password, function(err, user)
         {
             if (err) 
             { 
@@ -129,7 +129,7 @@ passport.serializeUser(function(user, cb)
 
 passport.deserializeUser(function(id, cb)
 {
-    database.getUserById(id, function(err, user)
+    database.getAdminUserById(id, function(err, user)
     {
         if (err) 
         {
@@ -140,7 +140,7 @@ passport.deserializeUser(function(id, cb)
 });
 
 app.use('/admin', admin);
-app.use('/api', api);
+app.use('/admin/api', adminApi);
 app.use('/:t(e|editor)', editor);
 app.get('/', function(req, res) 
 {

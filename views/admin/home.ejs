@@ -3,7 +3,7 @@
 
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Connected Users</title>
+    <title>Connected Users - syncpad-server</title>
     <style>
         * {
             margin: 0;
@@ -38,7 +38,7 @@
 </head>
 
 <body>
-    <%- include('partials/header', {user: user}) %>
+    <%- include('../partials/header', {user: user}) %>
 
         <div class="container">
             <div class="panel panel-default">
@@ -170,7 +170,7 @@
                     {
                         $.ajax(
                             {
-                                url: '/api/listClients',
+                                url: '/admin/api/list-clients',
                                 type: "POST",
                                 xhrFields: {
                                     withCredentials: true
@@ -204,7 +204,7 @@
             </script>
         </div>
 
-        <%- include('partials/footer', {user: user}) %>
+        <%- include('../partials/footer', {user: user}) %>
 </body>
 
 </html>

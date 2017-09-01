@@ -5,10 +5,11 @@ const _ = require('underscore');
 const router = express.Router();
 const utils = require('./../utils.js');
 const database = require('./../database');
+const sanitizeHtml = require('sanitize-html');
 
 const MIN_PASSWORD_LENGTH = process.env.MIN_PASSWORD_LENGTH || 10;
 
-router.post('/profile/update',
+router.post('/update-profile',
     require('connect-ensure-login').ensureLoggedIn(),
     function(req, res, next)
     {
@@ -33,7 +34,9 @@ router.post('/profile/update',
             }
             else
             {
-                database.updatePassword(user_id, password, function(err, id)
+                password = sanitizeHtml(password);
+                
+                database.updateAdminPassword(user_id, password, function(err, id)
                 {
                     if (!err)
                     {
@@ -55,7 +58,7 @@ router.post('/profile/update',
         }
     });
 
-router.get('/listClients',
+router.get('/list-clients',
     require('connect-ensure-login').ensureLoggedIn(),
     utils.checkRole('admin'),
     function(req, res, next)
