@@ -63,8 +63,7 @@ certs/*
 
 db/database.db
 db/sessions.db
+db/sessions
 
 .env
-.vscode
-
-public/js/editor/editor.js
+.vscode/*
