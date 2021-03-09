@@ -37,6 +37,8 @@ sockets.init = function(server)
             }
         });
 
+        console.log(`checkIfRoomExists - roomId=${roomId}; roomExists=${roomExists}`)
+
         return roomExists;
     }
 
@@ -65,10 +67,15 @@ sockets.init = function(server)
 
     function joinRoom(roomId, clientData, passcode)
     {
+        console.log(`joinRoom - roomId = ${roomId} -passcode=${passcode}`)
+
         if (!roomId || !passcode)
             return null;
 
-        if (checkIfRoomExists(roomId))
+        var roomExists = checkIfRoomExists(roomId);
+        console.log(`joinRoom - roomExists = ${roomExists}`)
+
+        if (roomExists)
         {
             console.log(`${roomId} - Room exists`)
             if (verifyRoomPasscode(roomId, passcode))
@@ -97,6 +104,8 @@ sockets.init = function(server)
 
     function createRoom(roomId, passcode)
     {
+        console.log(`createRoom - roomId=${roomId}; passcode=${passcode}`)
+
         var key = CryptoJS.lib.WordArray.random(128 / 8).toString();
 
         console.log(`${roomId} - Creating room with key ${key}`)
@@ -191,13 +200,16 @@ sockets.init = function(server)
     }
 
     // socket.io setup
-    let io = require('socket.io').listen(server);
+    //let io = require('socket.io').listen(server);
+    let io = require('socket.io')(server);
 
     // 
     // Get roomId from handshake and set it on the socket
     io.use(function(socket, next)
     {
         var roomId = socket.handshake.query.roomId;
+
+        console.log(`roomId: ${roomId}.`);
 
         if (roomId && roomId.length >= ROOMID_MIN_LENGTH)
         {

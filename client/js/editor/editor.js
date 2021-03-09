@@ -173,7 +173,7 @@ function connect(roomId, passcode)
             theme: 'snow'
         });
 
-    var socket = io('//' + window.location.host,
+    var socket = io(
         {
             query: '&roomId=' + roomId,
             reconnectionDelay: 10000,

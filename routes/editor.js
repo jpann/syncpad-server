@@ -11,11 +11,21 @@ const ROOMID_MIN_LENGTH = process.env.ROOMID_MIN_LENGTH || 8;
 
 function checkIfRoomExists(roomId, io)
 {
-    let socketObj = io.sockets.adapter.rooms;
+    console.log(`editor.checkIfRoomExists roomId=${roomId}`)
 
-    for (let id of Object.keys(socketObj))
+    let roomsMap = io.sockets.adapter.rooms;
+
+    console.log(roomsMap); 
+
+    //for (let id of Object.keys(socketObj))
+    for (let [key, value] of roomsMap)
     {
-        if (id == roomId)
+        console.log(`-- editor.checkIfRoomExists roomId=${roomId}; key=${key}`)
+    }
+
+    for (let [key, value] of roomsMap)
+    {
+        if (key == roomId)
             return true;
     }
 
@@ -77,6 +87,8 @@ router.get('/:roomId',
             var io = req.app.get('socketio');
 
             var roomExists = checkIfRoomExists(roomId, io);
+
+            console.log(`editor-roomId/ - roomId=${roomId}; roomExists = ${roomExists}`)
 
             res.render('editor/editor',
                 {
