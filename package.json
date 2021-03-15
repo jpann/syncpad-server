@@ -12,17 +12,12 @@
   "author": "jpann",
   "license": "MIT",
   "dependencies": {
-    "async": "^3.1.0",
     "body-parser": "*",
-    "bufferutil": "^4.0.1",
     "connect-ensure-login": "*",
     "connect-flash": "*",
     "connect-sqlite3": "*",
     "cookie-parser": "*",
     "crypto-js": "^3.1.8",
-    "debug": "^4.1.1",
-    "dotenv": "^8.1.0",
-    "ejs": "*",
     "express": "*",
     "express-session": "*",
     "express-validator": "^3.2.0",
@@ -36,22 +31,13 @@
     "password-hash": "*",
     "rotating-file-stream": "*",
     "sanitize-html": "*",
-    "serve-favicon": "*",
     "shortid": "*",
     "socket.io": "^3.1.2",
     "sqlite": "^3.0.3",
-    "underscore": "*",
-    "utf-8-validate": "^5.0.2"
+    "underscore": "*"
   },
   "devDependencies": {
-    "babel-preset-es2015": "^6.24.1",
-    "eslint": "^3.19.0",
     "gulp": "^4.0.2",
-    "gulp-babel": "^6.1.2",
-    "gulp-filter": "^5.0.0",
-    "gulp-flatten": "^0.4.0",
-    "gulp-minify-css": "^1.2.4",
-    "gulp-rename": "^1.2.2",
     "gulp-uglify": "^3.0.2",
     "pump": "^1.0.2"
   }
