@@ -1,7 +1,7 @@
 {
   "name": "syncpad-server",
   "description": "Server for a somewhat collaborative web-based text editor that uses encryption.",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
@@ -14,6 +14,7 @@
   "dependencies": {
     "async": "^3.1.0",
     "body-parser": "*",
+    "bufferutil": "^4.0.1",
     "connect-ensure-login": "*",
     "connect-flash": "*",
     "connect-sqlite3": "*",
@@ -37,17 +38,18 @@
     "sanitize-html": "*",
     "serve-favicon": "*",
     "shortid": "*",
-    "socket.io": "*",
+    "socket.io": "^3.1.2",
     "sqlite": "^3.0.3",
-    "underscore": "*"
+    "underscore": "*",
+    "utf-8-validate": "^5.0.2"
   },
   "devDependencies": {
     "babel-preset-es2015": "^6.24.1",
-    "eslint": "^4.18.2",
-    "gulp": "^3.9.1",
+    "eslint": "^3.19.0",
+    "gulp": "^4.0.2",
     "gulp-babel": "^6.1.2",
     "gulp-filter": "^5.0.0",
-    "gulp-flatten": "^0.3.1",
+    "gulp-flatten": "^0.4.0",
     "gulp-minify-css": "^1.2.4",
     "gulp-rename": "^1.2.2",
     "gulp-uglify": "^3.0.0",
