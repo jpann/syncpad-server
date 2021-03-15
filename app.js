@@ -34,7 +34,7 @@ app.use(flash());
 // Logging
 var logDirectory = path.join(__dirname, 'logs')
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
-var accessLogStream = rfs('access.log',
+var accessLogStream = rfs.createStream('access.log',
     {
         interval: '1d', // rotate daily
         path: logDirectory
